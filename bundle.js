@@ -154,7 +154,6 @@ class Game {
   }
 
   getBarriers() {
-
     const boundaries = [
       new Barrier(0, 0, 800, 10),
       new Barrier(0, 590, 800, 10),
@@ -173,7 +172,6 @@ class Game {
     ];
 
     return this.barriers.concat(boundaries, startingCover, levelOne);
-
   }
 
 
@@ -184,6 +182,18 @@ class Game {
   moveBullets() {
     this.bullets.forEach(bullet => {
       bullet.move();
+      // console.log('moveBullets', bullet.pos, bullet.speed);
+          this.getBarriers().forEach(barrier => {
+              if ((
+                bullet.pos[0] > barrier.sides.left &&
+                bullet.pos[0] < barrier.sides.right
+              ) && (
+                bullet.pos[1] > barrier.sides.top &&
+                bullet.pos[1] < barrier.sides.bottom
+              )) {
+                console.log('collision!');
+              }
+          });
     });
   }
 
@@ -194,13 +204,10 @@ class Game {
     ctx.fillRect(0, 0, this.dimensions[0], this.dimensions[1]);
 
 
-
-
     // render barriers and boundaries
     this.getBarriers().forEach(barrier => {
       barrier.draw(ctx);
     });
-    // new Barrier().draw(ctx);
 
 
 
@@ -208,9 +215,24 @@ class Game {
     // render moving objects
     this.getMovingObjects().forEach(object => {
       object.draw(ctx);
-      if (typeof(object) === Bullet) {
-        // console.log(object.pos);
-      }
+      // if (typeof(object) === Bullet) {
+      //
+      //   this.barriers().forEach(barrier => {
+      //
+      //       if ((
+      //         object.pos[0] > barrier.sides.left &&
+      //         object.pos[0] < barrier.sides.right
+      //       ) && (
+      //         object.pos[1] > barrier.sides.top &&
+      //         object.pos[1] < barrier.sides.bottom
+      //       )) {
+      //         console.log('collision!');
+      //       }
+      //
+      //   });
+      //
+      // }
+
     });
 
     // render the player's aim
@@ -220,6 +242,8 @@ class Game {
     ctx.strokeStyle = 'white';
     ctx.stroke();
   }
+
+
 
 }
 
@@ -237,6 +261,18 @@ class Barrier {
     this.yPos = yPos;
     this.width = width;
     this.height = height;
+
+    // top, right, bottom, left //
+    this.sides = {
+      top: this.yPos,
+      right: (this.xPos + this.width),
+      bottom: (this.yPos + this.height),
+      left: this.xPos
+    };
+  }
+
+  sides() {
+    return this.sides;
   }
 
   draw(ctx) {
@@ -328,7 +364,7 @@ class GameView {
   }
 
   handleClick() {
-    console.log(this.mousePos);
+    // console.log(this.mousePos);
     this.tank.fire(this.mousePos);
   }
 

@@ -60,15 +60,61 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 0);
+/******/ 	return __webpack_require__(__webpack_require__.s = 1);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
+/***/ (function(module, exports) {
+
+class Bullet {
+  constructor(posObject) {
+    this.pos = posObject.tankPos;
+    this.mousePos = posObject.mousePos;
+    this.speed = 5;
+    this.slope = this.calcSlope();
+  }
+
+  calcSlope() {
+    let slope = [(this.mousePos[0] - this.pos[0]),
+                (this.mousePos[1] - this.pos[1])];
+
+    if (Math.abs(slope[0]) >= Math.abs(slope[1])) {
+      slope = [(slope[0] / Math.abs(slope[0])),
+              (slope[1] / Math.abs(slope[0]))];
+    } else {
+      slope = [(slope[0] / Math.abs(slope[1])),
+              (slope[1] / Math.abs(slope[1]))];
+    }
+
+    return slope;
+  }
+
+  move() {
+    let slope = this.slope;
+
+    slope = [(slope[0] * this.speed), (slope[1] * this.speed)];
+    this.pos = [(this.pos[0] + slope[0]), (this.pos[1] + slope[1])];
+    // console.log(this.pos);
+  }
+
+  draw(ctx) {
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.arc(this.pos[0], this.pos[1], 5, 0, (2 * Math.PI), false);
+    ctx.fill();
+  }
+}
+
+module.exports = Bullet;
+
+
+/***/ }),
+/* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
-const Game = __webpack_require__(1);
-const GameView = __webpack_require__(4);
+const Game = __webpack_require__(2);
+const GameView = __webpack_require__(5);
 
 document.addEventListener("DOMContentLoaded", function(){
   const canvas = document.getElementById('game-map');
@@ -80,18 +126,19 @@ document.addEventListener("DOMContentLoaded", function(){
 
 
 /***/ }),
-/* 1 */
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
-const Barrier = __webpack_require__(2);
-const Tank = __webpack_require__(3);
-const Bullet = __webpack_require__(5);
+const Barrier = __webpack_require__(3);
+const Tank = __webpack_require__(4);
+const Bullet = __webpack_require__(0);
 
 class Game {
-  constructor(object) {
-    this.dimensions = object.dimensions;
+  constructor(canvas) {
+    this.dimensions = canvas.dimensions;
     this.tanks = [];
     this.bullets = [];
+    this.barriers = [];
   }
 
   addTank() {
@@ -106,7 +153,31 @@ class Game {
     return bullet;
   }
 
-  getAllObjects() {
+  getBarriers() {
+
+    const boundaries = [
+      new Barrier(0, 0, 800, 10),
+      new Barrier(0, 590, 800, 10),
+      new Barrier(0, 10, 10, 580),
+      new Barrier(790, 10, 10, 580)
+    ];
+
+    const startingCover = [
+      new Barrier(100, 250, 20, 100),
+      new Barrier(680, 250, 20, 100)
+    ];
+
+    const levelOne = [
+      new Barrier(390, 100, 20, 150),
+      new Barrier(390, 350, 20, 150)
+    ];
+
+    return this.barriers.concat(boundaries, startingCover, levelOne);
+
+  }
+
+
+  getMovingObjects() {
     return [].concat(this.tanks, this.bullets);
   }
 
@@ -122,12 +193,24 @@ class Game {
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, this.dimensions[0], this.dimensions[1]);
 
+
+
+
     // render barriers and boundaries
-    new Barrier().draw(ctx);
+    this.getBarriers().forEach(barrier => {
+      barrier.draw(ctx);
+    });
+    // new Barrier().draw(ctx);
+
+
+
 
     // render moving objects
-    this.getAllObjects().forEach(object => {
+    this.getMovingObjects().forEach(object => {
       object.draw(ctx);
+      if (typeof(object) === Bullet) {
+        // console.log(object.pos);
+      }
     });
 
     // render the player's aim
@@ -144,52 +227,33 @@ module.exports = Game;
 
 
 /***/ }),
-/* 2 */
+/* 3 */
 /***/ (function(module, exports) {
 
 class Barrier {
-  constructor() {
-    // this.getBarriers = this.getBarriers.bind(this);
-    // this.getBoundaries = this.getBoundaries.bind(this);
-  }
 
-  getBarriers(ctx) {
-    ctx.fillStyle = 'white';
-    ctx.fillRect(100, 250, 20, 100);
-    ctx.fillStyle = 'white';
-    ctx.fillRect(680, 250, 20, 100);
-    ctx.fillStyle = 'white';
-    ctx.fillRect(390, 100, 20, 150);
-    ctx.fillStyle = 'white';
-    ctx.fillRect(390, 350, 20, 150);
-  }
-
-  getBoundaries(ctx) {
-    // boundaries
-    ctx.fillStyle = 'white';
-    ctx.fillRect(2, 2, 796, 10);
-    ctx.fillStyle = 'white';
-    ctx.fillRect(2, 588, 796, 10);
-    ctx.fillStyle = 'white';
-    ctx.fillRect(2, 14, 10, 572);
-    ctx.fillStyle = 'white';
-    ctx.fillRect(788, 14, 10, 572);
+  constructor(xPos, yPos, width, height) {
+    this.xPos = xPos;
+    this.yPos = yPos;
+    this.width = width;
+    this.height = height;
   }
 
   draw(ctx) {
-    this.getBoundaries(ctx);
-    this.getBarriers(ctx);
+    ctx.fillStyle = 'red';
+    ctx.fillRect(this.xPos, this.yPos, this.width, this.height);
   }
+
 }
 
 module.exports = Barrier;
 
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
-const Bullet = __webpack_require__(5);
+const Bullet = __webpack_require__(0);
 
 class Tank {
   constructor(game) {
@@ -235,7 +299,7 @@ module.exports = Tank;
 
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports) {
 
 class GameView {
@@ -275,8 +339,6 @@ class GameView {
       let direction = GameView.MOVES[k];
       key(k, () => { tank.move(direction); });
     });
-
-    // key('space', () => { tank.fire(this.mousePos); });
   }
 
   start() {
@@ -305,51 +367,6 @@ GameView.MOVES = {
 };
 
 module.exports = GameView;
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports) {
-
-class Bullet {
-  constructor(posObject) {
-    this.pos = posObject.tankPos;
-    this.mousePos = posObject.mousePos;
-    this.speed = 5;
-    this.slope = this.calcSlope();
-  }
-
-  calcSlope() {
-    let slope = [(this.mousePos[0] - this.pos[0]),
-                (this.mousePos[1] - this.pos[1])];
-
-    if (Math.abs(slope[0]) >= Math.abs(slope[1])) {
-      slope = [(slope[0] / Math.abs(slope[0])),
-              (slope[1] / Math.abs(slope[0]))];
-    } else {
-      slope = [(slope[0] / Math.abs(slope[1])),
-              (slope[1] / Math.abs(slope[1]))];
-    }
-
-    return slope;
-  }
-
-  move() {
-    let slope = this.slope;
-
-    slope = [(slope[0] * this.speed), (slope[1] * this.speed)];
-    this.pos = [(this.pos[0] + slope[0]), (this.pos[1] + slope[1])];
-  }
-
-  draw(ctx) {
-    ctx.fillStyle = 'white';
-    ctx.beginPath();
-    ctx.arc(this.pos[0], this.pos[1], 5, 0, (2 * Math.PI), false);
-    ctx.fill();
-  }
-}
-
-module.exports = Bullet;
 
 
 /***/ })

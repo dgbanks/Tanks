@@ -171,7 +171,8 @@ class Game {
       new Barrier(390, 350, 20, 150)
     ];
 
-    return this.barriers.concat(boundaries, startingCover, levelOne);
+    this.barriers = [].concat(boundaries, startingCover, levelOne);
+    return this.barriers;
   }
 
 
@@ -203,36 +204,14 @@ class Game {
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, this.dimensions[0], this.dimensions[1]);
 
-
     // render barriers and boundaries
     this.getBarriers().forEach(barrier => {
       barrier.draw(ctx);
     });
 
-
-
-
     // render moving objects
     this.getMovingObjects().forEach(object => {
       object.draw(ctx);
-      // if (typeof(object) === Bullet) {
-      //
-      //   this.barriers().forEach(barrier => {
-      //
-      //       if ((
-      //         object.pos[0] > barrier.sides.left &&
-      //         object.pos[0] < barrier.sides.right
-      //       ) && (
-      //         object.pos[1] > barrier.sides.top &&
-      //         object.pos[1] < barrier.sides.bottom
-      //       )) {
-      //         console.log('collision!');
-      //       }
-      //
-      //   });
-      //
-      // }
-
     });
 
     // render the player's aim
@@ -295,6 +274,7 @@ class Tank {
   constructor(game) {
     this.pos = [45, 300];
     this.game = game;
+    this.moveDirection = [0, 0];
   }
 
   draw(ctx) {
@@ -373,7 +353,11 @@ class GameView {
 
     Object.keys(GameView.MOVES).forEach((k) => {
       let direction = GameView.MOVES[k];
-      key(k, () => { tank.move(direction); });
+      key(k, () => {
+        tank.move(direction);
+        // set tank.moveDirection
+        console.log(this.game.barriers[0].sides.top);
+      });
     });
   }
 

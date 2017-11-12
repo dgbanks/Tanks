@@ -198,6 +198,41 @@ class Game {
     });
   }
 
+  moveObjects(direction) {
+    this.getMovingObjects().forEach(object => {
+      if (object instanceof Tank) {
+        object.move(direction);
+        object.moveDirection = [0, 0];
+        this.getBarriers().forEach(barrier => {
+          // console.log('getBarriers');
+          // console.log(object.pos);
+          if ((
+            (object.pos[0] + (object.width / 2)) > barrier.sides.left &&
+            (object.pos[0] - (object.width / 2)) < barrier.sides.right
+          ) && (
+            (object.pos[1] + (object.width / 2)) > barrier.sides.top &&
+            (object.pos[1] - (object.width / 2)) < barrier.sides.bottom
+          )) {
+            console.log('collision!');
+          }
+        });
+      } else {
+        object.move();
+        this.getBarriers().forEach(barrier => {
+          if ((
+            object.pos[0] > barrier.sides.left &&
+            object.pos[0] < barrier.sides.right
+          ) && (
+            object.pos[1] > barrier.sides.top &&
+            object.pos[1] < barrier.sides.bottom
+          )) {
+            console.log('collision!');
+          }
+        });
+      }
+    });
+  }
+
   drawEverything(ctx, mouseObject) {
     // render the canvas
     ctx.clearRect(0, 0, this.dimensions[0], this.dimensions[1]);
@@ -241,17 +276,12 @@ class Barrier {
     this.width = width;
     this.height = height;
 
-    // top, right, bottom, left //
     this.sides = {
       top: this.yPos,
       right: (this.xPos + this.width),
       bottom: (this.yPos + this.height),
       left: this.xPos
     };
-  }
-
-  sides() {
-    return this.sides;
   }
 
   draw(ctx) {
@@ -275,6 +305,13 @@ class Tank {
     this.pos = [45, 300];
     this.game = game;
     this.moveDirection = [0, 0];
+    this.width = 50;
+    // this.sides = {
+    //   top: this.pos[1] - (this.width / 2),
+    //   right: this.pos[0] + (this.width / 2),
+    //   bottom: this.pos[1] + (this.width / 2),
+    //   left: this.pos[0] - (this.width / 2)
+    // };
   }
 
   draw(ctx) {
@@ -286,7 +323,7 @@ class Tank {
 
     // tank body
     ctx.fillStyle = 'blue';
-    ctx.fillRect((this.pos[0] - 25), (this.pos[1] - 25), 50, 50);
+    ctx.fillRect((this.pos[0] - (this.width / 2)), (this.pos[1] - (this.width / 2)), this.width, this.width);
 
     // tank center
     ctx.fillStyle = 'white';
@@ -297,11 +334,14 @@ class Tank {
     // tank cannon
     ctx.fillStyle = 'white';
     ctx.fillRect(this.pos[0],(this.pos[1] - 2.5), 35, 5);
+
   }
 
   move(direction) {
     direction = [(direction[0] * 5), (direction[1] * 5)];
     this.pos = [(this.pos[0] + direction[0]), (this.pos[1] + direction[1])];
+    // console.log(this.pos);
+    // console.log(this.sides);
   }
 
   fire(mousePos) {
@@ -316,9 +356,9 @@ module.exports = Tank;
 
 /***/ }),
 /* 5 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-class GameView {
+/* WEBPACK VAR INJECTION */(function(global) {class GameView {
 
   constructor(game, context, canvas) {
     this.game = game;
@@ -349,14 +389,17 @@ class GameView {
   }
 
   bindKeys() {
+    // console.log('bindkey');
     const tank = this.tank;
 
     Object.keys(GameView.MOVES).forEach((k) => {
+      // console.log('inside foreach');
       let direction = GameView.MOVES[k];
-      key(k, () => {
-        tank.move(direction);
-        // set tank.moveDirection
-        console.log(this.game.barriers[0].sides.top);
+      global.key(k, () => {
+        // console.log(tank);
+        // tank.move(direction);
+        tank.moveDirection = direction;
+        // console.log(tank);
       });
     });
   }
@@ -371,7 +414,7 @@ class GameView {
   }
 
   animate() {
-    this.game.moveBullets();
+    this.game.moveObjects(this.tank.moveDirection);
     this.game.drawEverything(this.context, {mousePos: this.mousePos});
 
     requestAnimationFrame(this.animate.bind(this));
@@ -387,6 +430,34 @@ GameView.MOVES = {
 };
 
 module.exports = GameView;
+
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)))
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1,eval)("this");
+} catch(e) {
+	// This works if the window reference is available
+	if(typeof window === "object")
+		g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
 
 
 /***/ })

@@ -73,6 +73,7 @@ class Bullet {
     this.mousePos = posObject.mousePos;
     this.speed = 5;
     this.slope = this.calcSlope();
+    this.radius = 5;
   }
 
   calcSlope() {
@@ -101,7 +102,7 @@ class Bullet {
   draw(ctx) {
     ctx.fillStyle = 'white';
     ctx.beginPath();
-    ctx.arc(this.pos[0], this.pos[1], 5, 0, (2 * Math.PI), false);
+    ctx.arc(this.pos[0], this.pos[1], this.radius, 0, (2 * Math.PI), false);
     ctx.fill();
   }
 }
@@ -153,7 +154,7 @@ class Game {
     return bullet;
   }
 
-  getBarriers() {
+  addBarriers() {
     const boundaries = [
       new Barrier(0, 0, 800, 10),
       new Barrier(0, 590, 800, 10),
@@ -180,21 +181,24 @@ class Game {
     return [].concat(this.tanks, this.bullets);
   }
 
-  moveBullets() {
-    this.bullets.forEach(bullet => {
-      bullet.move();
-      // console.log('moveBullets', bullet.pos, bullet.speed);
-          this.getBarriers().forEach(barrier => {
-              if ((
-                bullet.pos[0] > barrier.sides.left &&
-                bullet.pos[0] < barrier.sides.right
-              ) && (
-                bullet.pos[1] > barrier.sides.top &&
-                bullet.pos[1] < barrier.sides.bottom
-              )) {
-                console.log('collision!');
-              }
-          });
+  willCollide(object) {
+    let property;
+    if (object instanceof Tank) {
+      property = object.width / 2;
+    } else {
+      property = object.radius;
+    }
+
+    this.addBarriers().forEach(barrier => {
+      if ((
+        (object.pos[0] + property) > barrier.sides.left &&
+        (object.pos[0] - property) < barrier.sides.right
+      ) && (
+        (object.pos[1] + property) > barrier.sides.top &&
+        (object.pos[1] - property) < barrier.sides.bottom
+      )) {
+        console.log('collision!');
+      }
     });
   }
 
@@ -203,32 +207,10 @@ class Game {
       if (object instanceof Tank) {
         object.move(direction);
         object.moveDirection = [0, 0];
-        this.getBarriers().forEach(barrier => {
-          // console.log('getBarriers');
-          // console.log(object.pos);
-          if ((
-            (object.pos[0] + (object.width / 2)) > barrier.sides.left &&
-            (object.pos[0] - (object.width / 2)) < barrier.sides.right
-          ) && (
-            (object.pos[1] + (object.width / 2)) > barrier.sides.top &&
-            (object.pos[1] - (object.width / 2)) < barrier.sides.bottom
-          )) {
-            console.log('collision!');
-          }
-        });
+        this.willCollide(object);
       } else {
         object.move();
-        this.getBarriers().forEach(barrier => {
-          if ((
-            object.pos[0] > barrier.sides.left &&
-            object.pos[0] < barrier.sides.right
-          ) && (
-            object.pos[1] > barrier.sides.top &&
-            object.pos[1] < barrier.sides.bottom
-          )) {
-            console.log('collision!');
-          }
-        });
+        this.willCollide(object);
       }
     });
   }
@@ -240,7 +222,7 @@ class Game {
     ctx.fillRect(0, 0, this.dimensions[0], this.dimensions[1]);
 
     // render barriers and boundaries
-    this.getBarriers().forEach(barrier => {
+    this.addBarriers().forEach(barrier => {
       barrier.draw(ctx);
     });
 
@@ -256,8 +238,6 @@ class Game {
     ctx.strokeStyle = 'white';
     ctx.stroke();
   }
-
-
 
 }
 

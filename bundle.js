@@ -74,6 +74,7 @@ class Bullet {
     this.speed = 5;
     this.slope = this.calcSlope();
     this.radius = 5;
+    this.color = 'white';
   }
 
   calcSlope() {
@@ -100,7 +101,7 @@ class Bullet {
   }
 
   draw(ctx) {
-    ctx.fillStyle = 'white';
+    ctx.fillStyle = this.color;
     ctx.beginPath();
     ctx.arc(this.pos[0], this.pos[1], this.radius, 0, (2 * Math.PI), false);
     ctx.fill();
@@ -189,6 +190,7 @@ class Game {
       property = object.radius;
     }
 
+    let bool;
     this.addBarriers().forEach(barrier => {
       if ((
         (object.pos[0] + property) > barrier.sides.left &&
@@ -197,20 +199,25 @@ class Game {
         (object.pos[1] + property) > barrier.sides.top &&
         (object.pos[1] - property) < barrier.sides.bottom
       )) {
-        console.log('collision!');
+        bool = true;
       }
     });
+
+    return bool;
   }
 
   moveObjects(direction) {
     this.getMovingObjects().forEach(object => {
+      // console.log(object);
       if (object instanceof Tank) {
         object.move(direction);
         object.moveDirection = [0, 0];
         this.willCollide(object);
       } else {
         object.move();
-        this.willCollide(object);
+        if (this.willCollide(object)) {
+          object.color = 'green';
+        }
       }
     });
   }

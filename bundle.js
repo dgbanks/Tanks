@@ -193,7 +193,7 @@ class Game {
     }
 
     let bool;
-    this.addBarriers().forEach(barrier => {
+    this.barriers.forEach(barrier => {
       if ((
         (object.pos[0] + property) >= barrier.sides.left &&
         (object.pos[0] - property) <= barrier.sides.right
@@ -208,67 +208,76 @@ class Game {
     return bool;
   }
 
-  validatesMove(tank, direction) {
+  tankCanMove(direction) {
+    // console.log(this.tanks[0].sides().top);
+    // console.log(this.barriers[0].sides.bottom);
+    // console.log(this.tanks[0].sides().top === this.barriers[0].sides.bottom);
+    let bool = true;
+
     this.barriers.forEach(barrier => {
-      if ((tank.sides.top === barrier.sides.bottom) && (
-        (tank.sides.left > barrier.sides.left &&
-          tank.sides.left < barrier.sides.right) ||
-        (tank.sides.right > barrier.sides.left &&
-          tank.sides.right < barrier.sides.right) ||
-        (tank.pos[0] > barrier.sides.left &&
-          tank.pos[0] < barrier.sides.right))) {
-        if (direction === [0, -1]) {
-          direction = [0, 0];
+
+      if ((direction[0] === 0) && (direction[1] === -1)) {
+        if ((this.tanks[0].sides().top === barrier.sides.bottom) && (
+          (this.tanks[0].sides().left >= barrier.sides.left &&
+            this.tanks[0].sides().left < barrier.sides.right) ||
+          (this.tanks[0].sides().right > barrier.sides.left &&
+            this.tanks[0].sides().right <= barrier.sides.right) ||
+          (this.tanks[0].pos[0] > barrier.sides.left &&
+            this.tanks[0].pos[0] < barrier.sides.right))) {
+          bool = false;
         }
       }
 
-      if ((tank.sides.bottom === barrier.sides.top) && (
-        (tank.sides.left > barrier.sides.left &&
-          tank.sides.left < barrier.sides.right) ||
-        (tank.sides.right > barrier.sides.left &&
-          tank.sides.right < barrier.sides.right) ||
-        (tank.pos[0] > barrier.sides.left &&
-          tank.pos[0] < barrier.sides.right))) {
-        if (direction === [0, 1]) {
-          direction = [0, 0];
+      if ((direction[0] === 0) && (direction[1] === 1)) {
+        if ((this.tanks[0].sides().bottom === barrier.sides.top) && (
+          (this.tanks[0].sides().left >= barrier.sides.left &&
+            this.tanks[0].sides().left < barrier.sides.right) ||
+          (this.tanks[0].sides().right > barrier.sides.left &&
+            this.tanks[0].sides().right <= barrier.sides.right) ||
+          (this.tanks[0].pos[0] > barrier.sides.left &&
+            this.tanks[0].pos[0] < barrier.sides.right))) {
+          bool = false;
         }
       }
 
-      if ((tank.sides.left === barrier.sides.right) && (
-        (tank.sides.top > barrier.sides.top &&
-          tank.sides.top < barrier.sides.bottom) ||
-        (tank.sides.bottom > barrier.sides.top &&
-          tank.sides.bottom < barrier.sides.bottom) ||
-        (tank.pos[1] > barrier.sides.top &&
-          tank.pos[1] < barrier.sides.bottom))) {
-        if (direction === [-1, 0]) {
-          direction = [0, 0];
+      if ((direction[0] === -1) && (direction[1] === 0)) {
+        if ((this.tanks[0].sides().left === barrier.sides.right) && (
+          (this.tanks[0].sides().top > barrier.sides.top &&
+            this.tanks[0].sides().top < barrier.sides.bottom) ||
+          (this.tanks[0].sides().bottom > barrier.sides.top &&
+            this.tanks[0].sides().bottom < barrier.sides.bottom) ||
+          (this.tanks[0].pos[1] > barrier.sides.top &&
+            this.tanks[0].pos[1] < barrier.sides.bottom))) {
+          bool = false;
         }
       }
 
-      if ((tank.sides.right === barrier.sides.left) && (
-        (tank.sides.top > barrier.sides.top &&
-          tank.sides.top < barrier.sides.bottom) ||
-        (tank.sides.bottom > barrier.sides.top &&
-          tank.sides.bottom < barrier.sides.bottom) ||
-        (tank.pos[1] > barrier.sides.top &&
-          tank.pos[1] < barrier.sides.bottom))) {
-        if (direction === [1, 0]) {
-          direction = [0, 0];
+      if ((direction[0] === 1) && (direction[1] === 0)) {
+        if ((this.tanks[0].sides().right === barrier.sides.left) && (
+          (this.tanks[0].sides().top > barrier.sides.top &&
+            this.tanks[0].sides().top < barrier.sides.bottom) ||
+          (this.tanks[0].sides().bottom > barrier.sides.top &&
+            this.tanks[0].sides().bottom < barrier.sides.bottom) ||
+          (this.tanks[0].pos[1] > barrier.sides.top &&
+            this.tanks[0].pos[1] < barrier.sides.bottom))) {
+          bool = false;
         }
       }
+
     });
-    tank.move(direction);
+
+    return bool;
   }
 
   moveObjects(direction) {
     this.getMovingObjects().forEach(object => {
       if (object instanceof Tank) {
-        if (!this.willCollide(object)) {
-          object.move(direction);
+        console.log(this.tankCanMove(direction));
+        if (!this.tankCanMove(direction)) {
+          direction = [0, 0];
         }
+        object.move(direction);
         object.moveDirection = [0, 0];
-
       } else {
         object.move();
         if (this.willCollide(object)) {
@@ -295,7 +304,7 @@ class Game {
     ctx.fillRect(0, 0, this.dimensions[0], this.dimensions[1]);
 
     // render barriers and boundaries
-    this.addBarriers().forEach(barrier => {
+    this.barriers.forEach(barrier => {
       barrier.draw(ctx);
     });
 
@@ -363,8 +372,10 @@ class Tank {
     this.game = game;
     this.moveDirection = [0, 0];
     this.width = 50;
-    
-    this.sides = {
+  }
+
+  sides() {
+    return {
       top: this.pos[1] - (this.width / 2),
       right: this.pos[0] + (this.width / 2),
       bottom: this.pos[1] + (this.width / 2),
@@ -396,6 +407,7 @@ class Tank {
   }
 
   move(direction) {
+    // console.log(direction);
     direction = [(direction[0] * 5), (direction[1] * 5)];
     this.pos = [(this.pos[0] + direction[0]), (this.pos[1] + direction[1])];
     // console.log(this.pos);
@@ -425,6 +437,8 @@ module.exports = Tank;
     this.mousePos = [400, 300];
     this.tank = this.game.addTank();
 
+    this.game.addBarriers();
+
     this.setMousePosition = this.setMousePosition.bind(this);
     this.handleClick = this.handleClick.bind(this);
   }
@@ -442,22 +456,16 @@ module.exports = Tank;
   }
 
   handleClick() {
-    // console.log(this.mousePos);
     this.tank.fire(this.mousePos);
   }
 
   bindKeys() {
-    // console.log('bindkey');
     const tank = this.tank;
 
     Object.keys(GameView.MOVES).forEach((k) => {
-      // console.log('inside foreach');
       let direction = GameView.MOVES[k];
       global.key(k, () => {
-        // console.log(tank);
-        // tank.move(direction);
         tank.moveDirection = direction;
-        // console.log(tank);
       });
     });
   }

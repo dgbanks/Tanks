@@ -97,7 +97,6 @@ class Bullet {
 
     slope = [(slope[0] * this.speed), (slope[1] * this.speed)];
     this.pos = [(this.pos[0] + slope[0]), (this.pos[1] + slope[1])];
-    // console.log(this.pos);
   }
 
   draw(ctx) {
@@ -106,6 +105,7 @@ class Bullet {
     ctx.arc(this.pos[0], this.pos[1], this.radius, 0, (2 * Math.PI), false);
     ctx.fill();
   }
+
 }
 
 module.exports = Bullet;
@@ -134,6 +134,7 @@ document.addEventListener("DOMContentLoaded", function(){
 const Barrier = __webpack_require__(3);
 const Tank = __webpack_require__(4);
 const Bullet = __webpack_require__(0);
+const Explosion = __webpack_require__(7);
 
 class Game {
   constructor(canvas) {
@@ -141,6 +142,7 @@ class Game {
     this.tanks = [];
     this.bullets = [];
     this.barriers = [];
+    this.explosions = [];
   }
 
   addTank() {
@@ -193,11 +195,11 @@ class Game {
     let bool;
     this.addBarriers().forEach(barrier => {
       if ((
-        (object.pos[0] + property) > barrier.sides.left &&
-        (object.pos[0] - property) < barrier.sides.right
+        (object.pos[0] + property) >= barrier.sides.left &&
+        (object.pos[0] - property) <= barrier.sides.right
       ) && (
-        (object.pos[1] + property) > barrier.sides.top &&
-        (object.pos[1] - property) < barrier.sides.bottom
+        (object.pos[1] + property) >= barrier.sides.top &&
+        (object.pos[1] - property) <= barrier.sides.bottom
       )) {
         bool = true;
       }
@@ -206,19 +208,78 @@ class Game {
     return bool;
   }
 
+  validatesMove(tank, direction) {
+    this.barriers.forEach(barrier => {
+      if ((tank.sides.top === barrier.sides.bottom) && (
+        (tank.sides.left > barrier.sides.left &&
+          tank.sides.left < barrier.sides.right) ||
+        (tank.sides.right > barrier.sides.left &&
+          tank.sides.right < barrier.sides.right) ||
+        (tank.pos[0] > barrier.sides.left &&
+          tank.pos[0] < barrier.sides.right))) {
+        if (direction === [0, -1]) {
+          direction = [0, 0];
+        }
+      }
+
+      if ((tank.sides.bottom === barrier.sides.top) && (
+        (tank.sides.left > barrier.sides.left &&
+          tank.sides.left < barrier.sides.right) ||
+        (tank.sides.right > barrier.sides.left &&
+          tank.sides.right < barrier.sides.right) ||
+        (tank.pos[0] > barrier.sides.left &&
+          tank.pos[0] < barrier.sides.right))) {
+        if (direction === [0, 1]) {
+          direction = [0, 0];
+        }
+      }
+
+      if ((tank.sides.left === barrier.sides.right) && (
+        (tank.sides.top > barrier.sides.top &&
+          tank.sides.top < barrier.sides.bottom) ||
+        (tank.sides.bottom > barrier.sides.top &&
+          tank.sides.bottom < barrier.sides.bottom) ||
+        (tank.pos[1] > barrier.sides.top &&
+          tank.pos[1] < barrier.sides.bottom))) {
+        if (direction === [-1, 0]) {
+          direction = [0, 0];
+        }
+      }
+
+      if ((tank.sides.right === barrier.sides.left) && (
+        (tank.sides.top > barrier.sides.top &&
+          tank.sides.top < barrier.sides.bottom) ||
+        (tank.sides.bottom > barrier.sides.top &&
+          tank.sides.bottom < barrier.sides.bottom) ||
+        (tank.pos[1] > barrier.sides.top &&
+          tank.pos[1] < barrier.sides.bottom))) {
+        if (direction === [1, 0]) {
+          direction = [0, 0];
+        }
+      }
+    });
+    tank.move(direction);
+  }
+
   moveObjects(direction) {
     this.getMovingObjects().forEach(object => {
-      // console.log(object);
       if (object instanceof Tank) {
-        object.move(direction);
-        object.moveDirection = [0, 0];
-        if (this.willCollide(object)) {
-          
+        if (!this.willCollide(object)) {
+          object.move(direction);
         }
+        object.moveDirection = [0, 0];
 
       } else {
         object.move();
         if (this.willCollide(object)) {
+          const explosion = new Explosion(object.pos);
+          this.explosions.push(explosion);
+          setTimeout(() => {
+            this.explosions = this.explosions.filter(ex => (
+              ex !== explosion
+            ));
+          }, 300);
+
           this.bullets = this.bullets.filter(bullet => (
             bullet !== object
           ));
@@ -243,14 +304,18 @@ class Game {
       object.draw(ctx);
     });
 
+    this.explosions.forEach(explosion => {
+      explosion.draw(ctx);
+    });
+
     // render the player's aim
     ctx.beginPath();
     ctx.moveTo(this.playerTank.pos[0], this.playerTank.pos[1]);
     ctx.lineTo(mouseObject.mousePos[0], mouseObject.mousePos[1]);
     ctx.strokeStyle = 'white';
+    ctx.lineWidth = 1;
     ctx.stroke();
   }
-
 }
 
 module.exports = Game;
@@ -298,12 +363,13 @@ class Tank {
     this.game = game;
     this.moveDirection = [0, 0];
     this.width = 50;
-    // this.sides = {
-    //   top: this.pos[1] - (this.width / 2),
-    //   right: this.pos[0] + (this.width / 2),
-    //   bottom: this.pos[1] + (this.width / 2),
-    //   left: this.pos[0] - (this.width / 2)
-    // };
+    
+    this.sides = {
+      top: this.pos[1] - (this.width / 2),
+      right: this.pos[0] + (this.width / 2),
+      bottom: this.pos[1] + (this.width / 2),
+      left: this.pos[0] - (this.width / 2)
+    };
   }
 
   draw(ctx) {
@@ -450,6 +516,32 @@ try {
 // easier to handle this case. if(!global) { ...}
 
 module.exports = g;
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports) {
+
+class Explosion {
+
+  constructor(pos) {
+    this.pos = pos;
+    this.radius = 0;
+  }
+
+  draw(ctx) {
+    ctx.beginPath();
+    ctx.arc(this.pos[0], this.pos[1], this.radius, 0, (2 * Math.PI), false);
+    ctx.strokeStyle = 'red';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    this.radius = this.radius + 1;
+  }
+
+}
+
+module.exports = Explosion;
 
 
 /***/ })

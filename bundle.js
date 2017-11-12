@@ -212,11 +212,16 @@ class Game {
       if (object instanceof Tank) {
         object.move(direction);
         object.moveDirection = [0, 0];
-        this.willCollide(object);
+        if (this.willCollide(object)) {
+          
+        }
+
       } else {
         object.move();
         if (this.willCollide(object)) {
-          object.color = 'green';
+          this.bullets = this.bullets.filter(bullet => (
+            bullet !== object
+          ));
         }
       }
     });

@@ -268,30 +268,28 @@ class Game {
 
   moveObjects(direction) {
     this.getMovingObjects().forEach(object => {
-      if (object instanceof Tank) {
-        // console.log(this.tankCanMove(direction));
-        if (!this.tankCanMove(direction)) {
-          direction = [0, 0];
-        }
-        // console.log(object.pos);
-        object.move(direction);
-        object.moveDirection = [0, 0];
-      } else {
-        object.move();
-        if (this.willCollide(object)) {
-          const explosion = new Explosion(object.pos);
-          this.explosions.push(explosion);
-          setTimeout(() => {
-            this.explosions = this.explosions.filter(ex => (
-              ex !== explosion
-            ));
-          }, 300);
+        if (object instanceof Tank) {
+            if (!this.tankCanMove(direction)) {
+              direction = [0, 0];
+            }
+            object.move(direction);
+            object.moveDirection = [0, 0];
+        } else {
+            object.move();
+            if (this.willCollide(object)) {
+              const explosion = new Explosion(object.pos);
+              this.explosions.push(explosion);
+              setTimeout(() => {
+                this.explosions = this.explosions.filter(ex => (
+                  ex !== explosion
+                ));
+              }, 300);
 
-          this.bullets = this.bullets.filter(bullet => (
-            bullet !== object
-          ));
+              this.bullets = this.bullets.filter(bullet => (
+                bullet !== object
+              ));
+            }
         }
-      }
     });
   }
 
@@ -535,6 +533,7 @@ class Explosion {
   constructor(pos) {
     this.pos = pos;
     this.radius = 0;
+    this.radiusTwo = 0;
   }
 
   draw(ctx) {
@@ -544,7 +543,14 @@ class Explosion {
     ctx.lineWidth = 3;
     ctx.stroke();
 
+    ctx.beginPath();
+    ctx.arc(this.pos[0], this.pos[1], this.radiusTwo, 0, (2 * Math.PI), false);
+    ctx.strokeStyle = 'orange';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
     this.radius = this.radius + 1;
+    this.radiusTwo = this.radiusTwo + .5;
   }
 
 }

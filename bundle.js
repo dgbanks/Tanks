@@ -99,6 +99,34 @@ class Bullet {
     this.pos = [(this.pos[0] + slope[0]), (this.pos[1] + slope[1])];
   }
 
+  // willCollide(objects) {
+  //   // let property;
+  //   // if (object instanceof Tank) {
+  //   //   property = object.width / 2;
+  //   // } else {
+  //   //   property = object.radius;
+  //   // }
+  //
+  //   objects.forEach(object => {
+  //
+  //   });
+  //
+  //   let bool;
+  //   this.barriers.forEach(barrier => {
+  //     if ((
+  //       (object.pos[0] + property) >= barrier.sides.left &&
+  //       (object.pos[0] - property) <= barrier.sides.right
+  //     ) && (
+  //       (object.pos[1] + property) >= barrier.sides.top &&
+  //       (object.pos[1] - property) <= barrier.sides.bottom
+  //     )) {
+  //       bool = true;
+  //     }
+  //   });
+  //
+  //   return bool;
+  // }
+
   draw(ctx) {
     ctx.fillStyle = this.color;
     ctx.beginPath();
@@ -323,7 +351,7 @@ class Tank {
     this.width = 50;
   }
 
-  sides() {
+  getSides() {
     return {
       top: this.pos[1] - (this.width / 2),
       right: this.pos[0] + (this.width / 2),
@@ -361,11 +389,11 @@ class Tank {
 
     if ((direction[0] === 0) && (direction[1] === -1)) {
       this.game.barriers.forEach(barrier => {
-        if ((this.sides().top === barrier.sides.bottom) && (
-          (this.sides().left >= barrier.sides.left &&
-          this.sides().left < barrier.sides.right) ||
-          (this.sides().right > barrier.sides.left &&
-          this.sides().right <= barrier.sides.right) ||
+        if ((this.sides.top === barrier.sides.bottom) && (
+          (this.sides.left >= barrier.sides.left &&
+          this.sides.left < barrier.sides.right) ||
+          (this.sides.right > barrier.sides.left &&
+          this.sides.right <= barrier.sides.right) ||
           (this.pos[0] >= barrier.sides.left &&
             this.pos[0] <= barrier.sides.right))) {
               bool = false;
@@ -375,11 +403,11 @@ class Tank {
 
     if ((direction[0] === 0) && (direction[1] === 1)) {
       this.game.barriers.forEach(barrier => {
-        if ((this.sides().bottom === barrier.sides.top) && (
-          (this.sides().left >= barrier.sides.left &&
-          this.sides().left < barrier.sides.right) ||
-          (this.sides().right > barrier.sides.left &&
-          this.sides().right <= barrier.sides.right) ||
+        if ((this.sides.bottom === barrier.sides.top) && (
+          (this.sides.left >= barrier.sides.left &&
+          this.sides.left < barrier.sides.right) ||
+          (this.sides.right > barrier.sides.left &&
+          this.sides.right <= barrier.sides.right) ||
           (this.pos[0] >= barrier.sides.left &&
             this.pos[0] <= barrier.sides.right))) {
               bool = false;
@@ -389,11 +417,11 @@ class Tank {
 
     if ((direction[0] === -1) && (direction[1] === 0)) {
       this.game.barriers.forEach(barrier => {
-        if ((this.sides().left === barrier.sides.right) && (
-          (this.sides().top > barrier.sides.top &&
-          this.sides().top < barrier.sides.bottom) ||
-          (this.sides().bottom > barrier.sides.top &&
-          this.sides().bottom < barrier.sides.bottom) ||
+        if ((this.sides.left === barrier.sides.right) && (
+          (this.sides.top > barrier.sides.top &&
+          this.sides.top < barrier.sides.bottom) ||
+          (this.sides.bottom > barrier.sides.top &&
+          this.sides.bottom < barrier.sides.bottom) ||
           (this.pos[1] >= barrier.sides.top &&
             this.pos[1] <= barrier.sides.bottom))) {
               bool = false;
@@ -403,11 +431,11 @@ class Tank {
 
     if ((direction[0] === 1) && (direction[1] === 0)) {
       this.game.barriers.forEach(barrier => {
-        if ((this.sides().right === barrier.sides.left) && (
-          (this.sides().top > barrier.sides.top &&
-          this.sides().top < barrier.sides.bottom) ||
-          (this.sides().bottom > barrier.sides.top &&
-          this.sides().bottom < barrier.sides.bottom) ||
+        if ((this.sides.right === barrier.sides.left) && (
+          (this.sides.top > barrier.sides.top &&
+          this.sides.top < barrier.sides.bottom) ||
+          (this.sides.bottom > barrier.sides.top &&
+          this.sides.bottom < barrier.sides.bottom) ||
           (this.pos[1] >= barrier.sides.top &&
             this.pos[1] <= barrier.sides.bottom))) {
               bool = false;
@@ -421,6 +449,7 @@ class Tank {
   move(direction) {
     direction = [(direction[0] * 5), (direction[1] * 5)];
     this.pos = [(this.pos[0] + direction[0]), (this.pos[1] + direction[1])];
+    this.sides = this.getSides();
   }
 
   swivelCannon(mousePos) {
@@ -598,6 +627,7 @@ class PlayerOne extends Tank {
     this.color = DEFAULTS.color;
     this.aimX = this.pos[0] + 35;
     this.aimY = this.pos[1];
+    this.sides = this.getSides();
   }
 
 }
@@ -631,6 +661,8 @@ class EnemyTank extends Tank {
     this.color = DEFAULTS.color;
     this.aimX = this.pos[0] - 35;
     this.aimY = this.pos[1];
+
+    this.sides = this.getSides();
 
     this.move(Object.keys(MOVES)[Math.floor(Math.random() * 4)]);
   }

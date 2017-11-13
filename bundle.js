@@ -131,8 +131,10 @@ document.addEventListener("DOMContentLoaded", function(){
 /* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
-const Barrier = __webpack_require__(3);
 const Tank = __webpack_require__(4);
+const PlayerOne = __webpack_require__(8);
+const EnemyTank = __webpack_require__(9);
+const Barrier = __webpack_require__(3);
 const Bullet = __webpack_require__(0);
 const Explosion = __webpack_require__(7);
 
@@ -146,9 +148,15 @@ class Game {
   }
 
   addTank() {
-    const tank = new Tank(this);
+    const tank = new PlayerOne(this);
     this.tanks.push(tank);
     this.playerTank = tank;
+    return tank;
+  }
+
+  addEnemies() {
+    const tank = new EnemyTank(this);
+    this.tanks.push(tank);
     return tank;
   }
 
@@ -171,8 +179,8 @@ class Game {
     ];
 
     const levelOne = [
-      new Barrier(390, 100, 25, 150),
-      new Barrier(390, 350, 25, 150)
+      new Barrier(390, 100, 20, 150),
+      new Barrier(390, 350, 20, 150)
     ];
 
     this.barriers = [].concat(boundaries, startingCover, levelOne);
@@ -208,68 +216,10 @@ class Game {
     return bool;
   }
 
-  tankCanMove(direction) {
-    let bool = true;
-
-    this.barriers.forEach(barrier => {
-
-      if ((direction[0] === 0) && (direction[1] === -1)) {
-        if ((this.tanks[0].sides().top === barrier.sides.bottom) && (
-          (this.tanks[0].sides().left >= barrier.sides.left &&
-            this.tanks[0].sides().left < barrier.sides.right) ||
-          (this.tanks[0].sides().right > barrier.sides.left &&
-            this.tanks[0].sides().right <= barrier.sides.right) ||
-          (this.tanks[0].pos[0] >= barrier.sides.left &&
-            this.tanks[0].pos[0] <= barrier.sides.right))) {
-          bool = false;
-        }
-      }
-
-      if ((direction[0] === 0) && (direction[1] === 1)) {
-        if ((this.tanks[0].sides().bottom === barrier.sides.top) && (
-          (this.tanks[0].sides().left >= barrier.sides.left &&
-            this.tanks[0].sides().left < barrier.sides.right) ||
-          (this.tanks[0].sides().right > barrier.sides.left &&
-            this.tanks[0].sides().right <= barrier.sides.right) ||
-          (this.tanks[0].pos[0] >= barrier.sides.left &&
-            this.tanks[0].pos[0] <= barrier.sides.right))) {
-          bool = false;
-        }
-      }
-
-      if ((direction[0] === -1) && (direction[1] === 0)) {
-        if ((this.tanks[0].sides().left === barrier.sides.right) && (
-          (this.tanks[0].sides().top > barrier.sides.top &&
-            this.tanks[0].sides().top < barrier.sides.bottom) ||
-          (this.tanks[0].sides().bottom > barrier.sides.top &&
-            this.tanks[0].sides().bottom < barrier.sides.bottom) ||
-          (this.tanks[0].pos[1] >= barrier.sides.top &&
-            this.tanks[0].pos[1] <= barrier.sides.bottom))) {
-          bool = false;
-        }
-      }
-
-      if ((direction[0] === 1) && (direction[1] === 0)) {
-        if ((this.tanks[0].sides().right === barrier.sides.left) && (
-          (this.tanks[0].sides().top > barrier.sides.top &&
-            this.tanks[0].sides().top < barrier.sides.bottom) ||
-          (this.tanks[0].sides().bottom > barrier.sides.top &&
-            this.tanks[0].sides().bottom < barrier.sides.bottom) ||
-          (this.tanks[0].pos[1] >= barrier.sides.top &&
-            this.tanks[0].pos[1] <= barrier.sides.bottom))) {
-          bool = false;
-        }
-      }
-
-    });
-
-    return bool;
-  }
-
   moveObjects(direction) {
     this.getMovingObjects().forEach(object => {
         if (object instanceof Tank) {
-            if (!this.tankCanMove(direction)) {
+            if (!object.canMove(direction)) {
               direction = [0, 0];
             }
             object.move(direction);
@@ -364,10 +314,11 @@ const Bullet = __webpack_require__(0);
 
 class Tank {
   constructor(game) {
-    this.pos = [45, 300];
     this.game = game;
+    // this.pos = [45, 300];
     this.moveDirection = [0, 0];
     this.width = 50;
+    // this.color = 'blue';
   }
 
   sides() {
@@ -387,7 +338,7 @@ class Tank {
     ctx.stroke();
 
     // tank body
-    ctx.fillStyle = 'blue';
+    ctx.fillStyle = this.color;
     ctx.fillRect((this.pos[0] - (this.width / 2)), (this.pos[1] - (this.width / 2)), this.width, this.width);
 
     // tank center
@@ -402,12 +353,67 @@ class Tank {
 
   }
 
+  canMove(direction) {
+    let bool = true;
+
+    this.game.barriers.forEach(barrier => {
+
+      if ((direction[0] === 0) && (direction[1] === -1)) {
+        if ((this.sides().top === barrier.sides.bottom) && (
+          (this.sides().left >= barrier.sides.left &&
+            this.sides().left < barrier.sides.right) ||
+          (this.sides().right > barrier.sides.left &&
+            this.sides().right <= barrier.sides.right) ||
+          (this.pos[0] >= barrier.sides.left &&
+            this.pos[0] <= barrier.sides.right))) {
+          bool = false;
+        }
+      }
+
+      if ((direction[0] === 0) && (direction[1] === 1)) {
+        if ((this.sides().bottom === barrier.sides.top) && (
+          (this.sides().left >= barrier.sides.left &&
+            this.sides().left < barrier.sides.right) ||
+          (this.sides().right > barrier.sides.left &&
+            this.sides().right <= barrier.sides.right) ||
+          (this.pos[0] >= barrier.sides.left &&
+            this.pos[0] <= barrier.sides.right))) {
+          bool = false;
+        }
+      }
+
+      if ((direction[0] === -1) && (direction[1] === 0)) {
+        if ((this.sides().left === barrier.sides.right) && (
+          (this.sides().top > barrier.sides.top &&
+            this.sides().top < barrier.sides.bottom) ||
+          (this.sides().bottom > barrier.sides.top &&
+            this.sides().bottom < barrier.sides.bottom) ||
+          (this.pos[1] >= barrier.sides.top &&
+            this.pos[1] <= barrier.sides.bottom))) {
+          bool = false;
+        }
+      }
+
+      if ((direction[0] === 1) && (direction[1] === 0)) {
+        if ((this.sides().right === barrier.sides.left) && (
+          (this.sides().top > barrier.sides.top &&
+            this.sides().top < barrier.sides.bottom) ||
+          (this.sides().bottom > barrier.sides.top &&
+            this.sides().bottom < barrier.sides.bottom) ||
+          (this.pos[1] >= barrier.sides.top &&
+            this.pos[1] <= barrier.sides.bottom))) {
+          bool = false;
+        }
+      }
+
+    });
+
+    return bool;
+  }
+
   move(direction) {
-    // console.log(direction);
     direction = [(direction[0] * 5), (direction[1] * 5)];
     this.pos = [(this.pos[0] + direction[0]), (this.pos[1] + direction[1])];
-    // console.log(this.pos);
-    // console.log(this.sides);
   }
 
   fire(mousePos) {
@@ -432,6 +438,7 @@ module.exports = Tank;
     this.canvas = canvas;
     this.mousePos = [400, 300];
     this.tank = this.game.addTank();
+    this.enemy = this.game.addEnemies();
 
     this.game.addBarriers();
 
@@ -446,7 +453,7 @@ module.exports = Tank;
 
   setMousePosition(event) {
     this.mousePos = [(event.clientX - 350), (event.clientY - 50)];
-    console.log(this.mousePos);
+    // console.log(this.mousePos);
   }
 
   listenForClick() {
@@ -556,6 +563,54 @@ class Explosion {
 }
 
 module.exports = Explosion;
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Tank = __webpack_require__(4);
+
+const DEFAULTS = {
+  color: 'blue',
+  pos: [45, 300]
+};
+
+class PlayerOne extends Tank {
+  constructor(game) {
+    super(game);
+
+    this.pos = DEFAULTS.pos;
+    this.color = DEFAULTS.color;
+    // console.log(DEFAULTS.pos);
+  }
+
+}
+
+module.exports = PlayerOne;
+
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Tank = __webpack_require__(4);
+
+const DEFAULTS = {
+  color: 'red',
+  pos: [755, 300]
+};
+
+class EnemyTank extends Tank {
+  constructor(game) {
+    super(game);
+
+    this.pos = DEFAULTS.pos;
+    this.color = DEFAULTS.color;
+  }
+}
+
+module.exports = EnemyTank;
 
 
 /***/ })

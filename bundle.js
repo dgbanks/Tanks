@@ -120,7 +120,7 @@ class Bullet {
         //   this.game.tanks = this.game.tanks.filter(tank => {
         //     tank !== this.owner;
         //   });
-
+        this.game.remove(object);
         // }
 
       }
@@ -224,7 +224,7 @@ class Game {
       return;
     } else if (object instanceof Tank) {
       this.tanks = this.tanks.filter(tank => {
-        object !== tank
+        tank !== object;
       });
     } else if (object instanceof Bullet) {
       this.bullets = this.bullets.filter(bullet => {
@@ -241,30 +241,6 @@ class Game {
   getMovingObjects() {
     return [].concat(this.tanks, this.bullets);
   }
-
-  // willCollide(object) {
-  //   let property;
-  //   if (object instanceof Tank) {
-  //     property = object.width / 2;
-  //   } else {
-  //     property = object.radius;
-  //   }
-  //
-  //   let bool;
-  //   this.barriers.forEach(barrier => {
-  //     if ((
-  //       (object.pos[0] + property) >= barrier.sides.left &&
-  //       (object.pos[0] - property) <= barrier.sides.right
-  //     ) && (
-  //       (object.pos[1] + property) >= barrier.sides.top &&
-  //       (object.pos[1] - property) <= barrier.sides.bottom
-  //     )) {
-  //       bool = true;
-  //     }
-  //   });
-  //
-  //   return bool;
-  // }
 
   moveObjects(direction) {
     this.getMovingObjects().forEach(object => {

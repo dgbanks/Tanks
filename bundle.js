@@ -68,10 +68,12 @@
 /***/ (function(module, exports) {
 
 class Bullet {
-  constructor(posObject) {
-    this.pos = posObject.tankPos;
-    this.mousePos = posObject.mousePos;
-    this.targets = posObject.targets;
+  constructor(props) {
+    this.game = props.game;
+    this.owner = props.owner;
+    this.pos = props.tankPos;
+    this.mousePos = props.mousePos;
+    this.targets = this.owner.idEnemies();
     this.speed = 5;
     this.slope = this.calcSlope();
     this.radius = 5;
@@ -111,9 +113,16 @@ class Bullet {
         (this.pos[1] + this.radius) >= object.sides.top &&
         (this.pos[1] - this.radius) <= object.sides.bottom
       )) {
+
         bool = true;
-        // this.color = null;
-        // this.speed = 0;
+
+        // if (object instanceof Tank) {
+        //   this.game.tanks = this.game.tanks.filter(tank => {
+        //     tank !== this.owner;
+        //   });
+
+        // }
+
       }
     });
 
@@ -209,54 +218,73 @@ class Game {
     return this.barriers;
   }
 
+  remove(object) {
+
+    if (object instanceof Barrier) {
+      return;
+    } else if (object instanceof Tank) {
+      this.tanks = this.tanks.filter(tank => {
+        object !== tank
+      });
+    } else if (object instanceof Bullet) {
+      this.bullets = this.bullets.filter(bullet => {
+        object !== bullet
+      });
+    } else if (object instanceof Explosion) {
+      this.explosions = this.explosions.filter(explosion => {
+        object !== explosion
+      });
+    }
+
+  }
 
   getMovingObjects() {
     return [].concat(this.tanks, this.bullets);
   }
 
-  willCollide(object) {
-    let property;
-    if (object instanceof Tank) {
-      property = object.width / 2;
-    } else {
-      property = object.radius;
-    }
-
-    let bool;
-    this.barriers.forEach(barrier => {
-      if ((
-        (object.pos[0] + property) >= barrier.sides.left &&
-        (object.pos[0] - property) <= barrier.sides.right
-      ) && (
-        (object.pos[1] + property) >= barrier.sides.top &&
-        (object.pos[1] - property) <= barrier.sides.bottom
-      )) {
-        bool = true;
-      }
-    });
-
-    return bool;
-  }
+  // willCollide(object) {
+  //   let property;
+  //   if (object instanceof Tank) {
+  //     property = object.width / 2;
+  //   } else {
+  //     property = object.radius;
+  //   }
+  //
+  //   let bool;
+  //   this.barriers.forEach(barrier => {
+  //     if ((
+  //       (object.pos[0] + property) >= barrier.sides.left &&
+  //       (object.pos[0] - property) <= barrier.sides.right
+  //     ) && (
+  //       (object.pos[1] + property) >= barrier.sides.top &&
+  //       (object.pos[1] - property) <= barrier.sides.bottom
+  //     )) {
+  //       bool = true;
+  //     }
+  //   });
+  //
+  //   return bool;
+  // }
 
   moveObjects(direction) {
     this.getMovingObjects().forEach(object => {
         if (object instanceof Tank) {
-            if (!object.canMove(direction)) {
-              direction = [0, 0];
-            }
             object.move(direction);
             object.moveDirection = [0, 0];
         } else {
             object.move();
             if (object.willCollide([].concat(object.targets, this.barriers))) {
+
               const explosion = new Explosion(object.pos);
               this.explosions.push(explosion);
               setTimeout(() => {
+                // this.remove(explosion);
                 this.explosions = this.explosions.filter(ex => (
                   ex !== explosion
                 ));
               }, 300);
 
+              // this.remove(object);
               this.bullets = this.bullets.filter(bullet => (
                 bullet !== object
               ));
@@ -342,6 +370,7 @@ class Tank {
     this.game = game;
     this.moveDirection = [0, 0];
     this.width = 50;
+    this.speed = 5;
   }
 
   idEnemies() {
@@ -386,6 +415,7 @@ class Tank {
   canMove(direction) {
     let bool = true;
 
+    // up
     if ((direction[0] === 0) && (direction[1] === -1)) {
       this.game.barriers.forEach(barrier => {
         if ((this.sides.top === barrier.sides.bottom) && (
@@ -400,6 +430,7 @@ class Tank {
       });
     }
 
+    // down
     if ((direction[0] === 0) && (direction[1] === 1)) {
       this.game.barriers.forEach(barrier => {
         if ((this.sides.bottom === barrier.sides.top) && (
@@ -414,6 +445,7 @@ class Tank {
       });
     }
 
+    // left
     if ((direction[0] === -1) && (direction[1] === 0)) {
       this.game.barriers.forEach(barrier => {
         if ((this.sides.left === barrier.sides.right) && (
@@ -428,6 +460,7 @@ class Tank {
       });
     }
 
+    // right
     if ((direction[0] === 1) && (direction[1] === 0)) {
       this.game.barriers.forEach(barrier => {
         if ((this.sides.right === barrier.sides.left) && (
@@ -446,9 +479,16 @@ class Tank {
   }
 
   move(direction) {
-    direction = [(direction[0] * 5), (direction[1] * 5)];
+
+    if (!this.canMove(direction)) {
+      direction = [0, 0];
+    }
+
+    direction = [(direction[0] * this.speed), (direction[1] * this.speed)];
+
     this.pos = [(this.pos[0] + direction[0]), (this.pos[1] + direction[1])];
     this.sides = this.getSides();
+    console.log(this.pos);
   }
 
   swivelCannon(mousePos) {
@@ -461,7 +501,7 @@ class Tank {
   }
 
   fire(mousePos) {
-    const bullet = new Bullet({ mousePos: mousePos, tankPos: this.pos, targets: this.idEnemies() });
+    const bullet = new Bullet({ game: this.game, owner: this, mousePos: mousePos, tankPos: this.pos });
     this.game.addBullet(bullet);
   }
 }

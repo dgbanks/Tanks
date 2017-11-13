@@ -71,6 +71,7 @@ class Bullet {
   constructor(posObject) {
     this.pos = posObject.tankPos;
     this.mousePos = posObject.mousePos;
+    this.targets = posObject.targets;
     this.speed = 5;
     this.slope = this.calcSlope();
     this.radius = 5;
@@ -99,33 +100,25 @@ class Bullet {
     this.pos = [(this.pos[0] + slope[0]), (this.pos[1] + slope[1])];
   }
 
-  // willCollide(objects) {
-  //   // let property;
-  //   // if (object instanceof Tank) {
-  //   //   property = object.width / 2;
-  //   // } else {
-  //   //   property = object.radius;
-  //   // }
-  //
-  //   objects.forEach(object => {
-  //
-  //   });
-  //
-  //   let bool;
-  //   this.barriers.forEach(barrier => {
-  //     if ((
-  //       (object.pos[0] + property) >= barrier.sides.left &&
-  //       (object.pos[0] - property) <= barrier.sides.right
-  //     ) && (
-  //       (object.pos[1] + property) >= barrier.sides.top &&
-  //       (object.pos[1] - property) <= barrier.sides.bottom
-  //     )) {
-  //       bool = true;
-  //     }
-  //   });
-  //
-  //   return bool;
-  // }
+  willCollide(objects) {
+    let bool;
+
+    objects.forEach(object => {
+      if ((
+        (this.pos[0] + this.radius) >= object.sides.left &&
+        (this.pos[0] - this.radius) <= object.sides.right
+      ) && (
+        (this.pos[1] + this.radius) >= object.sides.top &&
+        (this.pos[1] - this.radius) <= object.sides.bottom
+      )) {
+        bool = true;
+        // this.color = null;
+        // this.speed = 0;
+      }
+    });
+
+    return bool;
+  }
 
   draw(ctx) {
     ctx.fillStyle = this.color;
@@ -255,7 +248,7 @@ class Game {
             object.moveDirection = [0, 0];
         } else {
             object.move();
-            if (this.willCollide(object)) {
+            if (object.willCollide([].concat(object.targets, this.barriers))) {
               const explosion = new Explosion(object.pos);
               this.explosions.push(explosion);
               setTimeout(() => {
@@ -349,6 +342,12 @@ class Tank {
     this.game = game;
     this.moveDirection = [0, 0];
     this.width = 50;
+  }
+
+  idEnemies() {
+    return this.game.tanks.filter(tank => (
+      tank !== this
+    ));
   }
 
   getSides() {
@@ -462,7 +461,7 @@ class Tank {
   }
 
   fire(mousePos) {
-    const bullet = new Bullet({ mousePos: mousePos, tankPos: this.pos });
+    const bullet = new Bullet({ mousePos: mousePos, tankPos: this.pos, targets: this.idEnemies() });
     this.game.addBullet(bullet);
   }
 }
@@ -628,6 +627,7 @@ class PlayerOne extends Tank {
     this.aimX = this.pos[0] + 35;
     this.aimY = this.pos[1];
     this.sides = this.getSides();
+    // this.enemies = this.idEnemies();
   }
 
 }
@@ -663,6 +663,8 @@ class EnemyTank extends Tank {
     this.aimY = this.pos[1];
 
     this.sides = this.getSides();
+    // this.enemies = this.idEnemies();
+
 
     this.move(Object.keys(MOVES)[Math.floor(Math.random() * 4)]);
   }

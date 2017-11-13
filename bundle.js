@@ -157,6 +157,7 @@ class Game {
   addEnemies() {
     const tank = new EnemyTank(this);
     this.tanks.push(tank);
+    this.enemy = tank;
     return tank;
   }
 
@@ -272,6 +273,7 @@ class Game {
     ctx.stroke();
 
     this.playerOne.swivelCannon(mouseObject.mousePos);
+    this.enemy.swivelCannon(this.playerOne.pos);
   }
 }
 
@@ -317,12 +319,8 @@ const Bullet = __webpack_require__(0);
 class Tank {
   constructor(game) {
     this.game = game;
-    // this.pos = [45, 300];
     this.moveDirection = [0, 0];
     this.width = 50;
-    // this.color = 'blue';
-    this.aimX = 80;
-    this.aimY = 300;
   }
 
   sides() {
@@ -337,7 +335,11 @@ class Tank {
   draw(ctx) {
     // tank body
     ctx.fillStyle = this.color;
-    ctx.fillRect((this.pos[0] - (this.width / 2)), (this.pos[1] - (this.width / 2)), this.width, this.width);
+    ctx.fillRect(
+      (this.pos[0] - (this.width / 2)),
+      (this.pos[1] - (this.width / 2)),
+      this.width,
+      this.width);
 
     // tank center
     ctx.fillStyle = 'white';
@@ -451,7 +453,7 @@ module.exports = Tank;
     this.canvas = canvas;
     this.mousePos = [400, 300];
     this.tank = this.game.addTank();
-    // this.enemy = this.game.addEnemies();
+    this.enemy = this.game.addEnemies();
 
     this.game.addBarriers();
 
@@ -594,7 +596,8 @@ class PlayerOne extends Tank {
 
     this.pos = DEFAULTS.pos;
     this.color = DEFAULTS.color;
-    // console.log(DEFAULTS.pos);
+    this.aimX = this.pos[0] + 35;
+    this.aimY = this.pos[1];
   }
 
 }
@@ -613,13 +616,29 @@ const DEFAULTS = {
   pos: [755, 300]
 };
 
+const MOVES = {
+  up: [0, -1],
+  left: [-1, 0],
+  right: [0, 1],
+  down: [1, 0]
+};
+
 class EnemyTank extends Tank {
   constructor(game) {
     super(game);
 
     this.pos = DEFAULTS.pos;
     this.color = DEFAULTS.color;
+    this.aimX = this.pos[0] - 35;
+    this.aimY = this.pos[1];
+
+    this.move(Object.keys(MOVES)[Math.floor(Math.random() * 4)]);
   }
+
+  move() {
+    Object.keys(MOVES)[Math.floor(Math.random() * 4)]
+  }
+
 }
 
 module.exports = EnemyTank;

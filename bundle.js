@@ -124,6 +124,8 @@ class Bullet {
     return bool;
   }
 
+
+
   draw(ctx) {
     ctx.fillStyle = this.color;
     ctx.beginPath();

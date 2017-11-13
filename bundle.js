@@ -116,12 +116,7 @@ class Bullet {
 
         bool = true;
 
-        // if (object instanceof Tank) {
-        //   this.game.tanks = this.game.tanks.filter(tank => {
-        //     tank !== this.owner;
-        //   });
         this.game.remove(object);
-        // }
 
       }
     });
@@ -223,17 +218,17 @@ class Game {
     if (object instanceof Barrier) {
       return;
     } else if (object instanceof Tank) {
-      this.tanks = this.tanks.filter(tank => {
-        tank !== object;
-      });
+      this.tanks = this.tanks.filter(tank => (
+        tank !== object
+      ));
     } else if (object instanceof Bullet) {
-      this.bullets = this.bullets.filter(bullet => {
+      this.bullets = this.bullets.filter(bullet => (
         object !== bullet
-      });
+      ));
     } else if (object instanceof Explosion) {
-      this.explosions = this.explosions.filter(explosion => {
+      this.explosions = this.explosions.filter(explosion => (
         object !== explosion
-      });
+      ));
     }
 
   }
@@ -253,17 +248,9 @@ class Game {
 
               const explosion = new Explosion(object.pos);
               this.explosions.push(explosion);
-              setTimeout(() => {
-                // this.remove(explosion);
-                this.explosions = this.explosions.filter(ex => (
-                  ex !== explosion
-                ));
-              }, 300);
+              setTimeout(() => { this.remove(explosion); }, 300);
 
-              // this.remove(object);
-              this.bullets = this.bullets.filter(bullet => (
-                bullet !== object
-              ));
+              this.remove(object);
             }
         }
     });

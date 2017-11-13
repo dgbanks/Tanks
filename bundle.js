@@ -357,57 +357,61 @@ class Tank {
   canMove(direction) {
     let bool = true;
 
-    this.game.barriers.forEach(barrier => {
-
-      if ((direction[0] === 0) && (direction[1] === -1)) {
+    if ((direction[0] === 0) && (direction[1] === -1)) {
+      this.game.barriers.forEach(barrier => {
         if ((this.sides().top === barrier.sides.bottom) && (
           (this.sides().left >= barrier.sides.left &&
-            this.sides().left < barrier.sides.right) ||
+          this.sides().left < barrier.sides.right) ||
           (this.sides().right > barrier.sides.left &&
-            this.sides().right <= barrier.sides.right) ||
+          this.sides().right <= barrier.sides.right) ||
           (this.pos[0] >= barrier.sides.left &&
             this.pos[0] <= barrier.sides.right))) {
-          bool = false;
-        }
-      }
+              bool = false;
+            }
+      });
+    }
 
-      if ((direction[0] === 0) && (direction[1] === 1)) {
+    if ((direction[0] === 0) && (direction[1] === 1)) {
+      this.game.barriers.forEach(barrier => {
         if ((this.sides().bottom === barrier.sides.top) && (
           (this.sides().left >= barrier.sides.left &&
-            this.sides().left < barrier.sides.right) ||
+          this.sides().left < barrier.sides.right) ||
           (this.sides().right > barrier.sides.left &&
-            this.sides().right <= barrier.sides.right) ||
+          this.sides().right <= barrier.sides.right) ||
           (this.pos[0] >= barrier.sides.left &&
             this.pos[0] <= barrier.sides.right))) {
-          bool = false;
-        }
-      }
+              bool = false;
+            }
+      });
+    }
 
-      if ((direction[0] === -1) && (direction[1] === 0)) {
+    if ((direction[0] === -1) && (direction[1] === 0)) {
+      this.game.barriers.forEach(barrier => {
         if ((this.sides().left === barrier.sides.right) && (
           (this.sides().top > barrier.sides.top &&
-            this.sides().top < barrier.sides.bottom) ||
+          this.sides().top < barrier.sides.bottom) ||
           (this.sides().bottom > barrier.sides.top &&
-            this.sides().bottom < barrier.sides.bottom) ||
+          this.sides().bottom < barrier.sides.bottom) ||
           (this.pos[1] >= barrier.sides.top &&
             this.pos[1] <= barrier.sides.bottom))) {
-          bool = false;
-        }
-      }
+              bool = false;
+            }
+      });
+    }
 
-      if ((direction[0] === 1) && (direction[1] === 0)) {
+    if ((direction[0] === 1) && (direction[1] === 0)) {
+      this.game.barriers.forEach(barrier => {
         if ((this.sides().right === barrier.sides.left) && (
           (this.sides().top > barrier.sides.top &&
-            this.sides().top < barrier.sides.bottom) ||
+          this.sides().top < barrier.sides.bottom) ||
           (this.sides().bottom > barrier.sides.top &&
-            this.sides().bottom < barrier.sides.bottom) ||
+          this.sides().bottom < barrier.sides.bottom) ||
           (this.pos[1] >= barrier.sides.top &&
             this.pos[1] <= barrier.sides.bottom))) {
-          bool = false;
-        }
-      }
-
-    });
+              bool = false;
+            }
+      });
+    }
 
     return bool;
   }

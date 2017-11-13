@@ -150,7 +150,7 @@ class Game {
   addTank() {
     const tank = new PlayerOne(this);
     this.tanks.push(tank);
-    this.playerTank = tank;
+    this.playerOne = tank;
     return tank;
   }
 
@@ -265,11 +265,13 @@ class Game {
 
     // render the player's aim
     ctx.beginPath();
-    ctx.moveTo(this.playerTank.pos[0], this.playerTank.pos[1]);
+    ctx.moveTo(this.playerOne.pos[0], this.playerOne.pos[1]);
     ctx.lineTo(mouseObject.mousePos[0], mouseObject.mousePos[1]);
     ctx.strokeStyle = 'white';
     ctx.lineWidth = 1;
     ctx.stroke();
+
+    this.playerOne.swivelCannon(mouseObject.mousePos);
   }
 }
 
@@ -319,6 +321,8 @@ class Tank {
     this.moveDirection = [0, 0];
     this.width = 50;
     // this.color = 'blue';
+    this.aimX = 80;
+    this.aimY = 300;
   }
 
   sides() {
@@ -331,12 +335,6 @@ class Tank {
   }
 
   draw(ctx) {
-    // tank radius
-    ctx.strokeStyle = 'white';
-    ctx.beginPath();
-    ctx.arc(this.pos[0], this.pos[1], 35, 0, (2 * Math.PI), false);
-    ctx.stroke();
-
     // tank body
     ctx.fillStyle = this.color;
     ctx.fillRect((this.pos[0] - (this.width / 2)), (this.pos[1] - (this.width / 2)), this.width, this.width);
@@ -348,9 +346,12 @@ class Tank {
     ctx.fill();
 
     // tank cannon
-    ctx.fillStyle = 'white';
-    ctx.fillRect(this.pos[0],(this.pos[1] - 2.5), 35, 5);
-
+    ctx.beginPath();
+    ctx.moveTo(this.pos[0], this.pos[1]);
+    ctx.lineTo(this.aimX, this.aimY);
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 5;
+    ctx.stroke();
   }
 
   canMove(direction) {
@@ -416,9 +417,17 @@ class Tank {
     this.pos = [(this.pos[0] + direction[0]), (this.pos[1] + direction[1])];
   }
 
+  swivelCannon(mousePos) {
+    let dX = this.pos[0] - mousePos[0];
+    let dY = mousePos[1] - this.pos[1];
+    let magic = Math.atan2(dX, dY) + (Math.PI / 2);
+
+    this.aimX = this.pos[0] + (35 * Math.cos(magic));
+    this.aimY = this.pos[1] + (35 * Math.sin(magic));
+  }
+
   fire(mousePos) {
     const bullet = new Bullet({ mousePos: mousePos, tankPos: this.pos });
-
     this.game.addBullet(bullet);
   }
 }
@@ -438,7 +447,7 @@ module.exports = Tank;
     this.canvas = canvas;
     this.mousePos = [400, 300];
     this.tank = this.game.addTank();
-    this.enemy = this.game.addEnemies();
+    // this.enemy = this.game.addEnemies();
 
     this.game.addBarriers();
 
@@ -447,13 +456,12 @@ module.exports = Tank;
   }
 
   listenForMouse() {
-    console.log(this.mousePos);
     this.canvas.addEventListener('mousemove', this.setMousePosition);
   }
 
   setMousePosition(event) {
     this.mousePos = [(event.clientX - 350), (event.clientY - 50)];
-    // console.log(this.mousePos);
+    // this.tank.swivelCannon(this.mousePos);
   }
 
   listenForClick() {

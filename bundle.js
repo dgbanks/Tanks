@@ -376,9 +376,9 @@ class Tank {
           (this.sides.right > barrier.sides.left &&
           this.sides.right <= barrier.sides.right) ||
           (this.pos[0] >= barrier.sides.left &&
-            this.pos[0] <= barrier.sides.right))) {
-              bool = false;
-            }
+          this.pos[0] <= barrier.sides.right))) {
+            bool = false;
+          }
       });
     }
 
@@ -391,9 +391,9 @@ class Tank {
           (this.sides.right > barrier.sides.left &&
           this.sides.right <= barrier.sides.right) ||
           (this.pos[0] >= barrier.sides.left &&
-            this.pos[0] <= barrier.sides.right))) {
-              bool = false;
-            }
+          this.pos[0] <= barrier.sides.right))) {
+            bool = false;
+          }
       });
     }
 
@@ -406,9 +406,9 @@ class Tank {
           (this.sides.bottom > barrier.sides.top &&
           this.sides.bottom < barrier.sides.bottom) ||
           (this.pos[1] >= barrier.sides.top &&
-            this.pos[1] <= barrier.sides.bottom))) {
-              bool = false;
-            }
+          this.pos[1] <= barrier.sides.bottom))) {
+            bool = false;
+          }
       });
     }
 
@@ -421,9 +421,9 @@ class Tank {
           (this.sides.bottom > barrier.sides.top &&
           this.sides.bottom < barrier.sides.bottom) ||
           (this.pos[1] >= barrier.sides.top &&
-            this.pos[1] <= barrier.sides.bottom))) {
-              bool = false;
-            }
+          this.pos[1] <= barrier.sides.bottom))) {
+            bool = false;
+          }
       });
     }
 
@@ -692,16 +692,22 @@ class EnemyTank extends Tank {
     this.speed = EnemyTank.DEFAULTS.speed;
     this.aimX = (this.pos[0] - 35);
     this.aimY = this.pos[1];
-
     this.sides = this.getSides();
     this.moveDirection = this.getNewDirection();
 
+    this.seesPlayerOne;
     this.lineOfFirePoint = [this.aimX, this.aimY];
     this.pixelsAwayFromCannon = 0;
 
+    //
     setInterval(() => { this.cannonAI(); }, 1);
 
-    console.log(this.getNewDirection());
+    // try to fire
+    setInterval(() => { if (this.seesPlayerOne) {  this.fire();  }  }, 750);
+
+    // new moveDirection every five seconds
+    setInterval(() => {  this.moveDirection = this.getNewDirection();  }, 5000);
+
   }
 
   drawLine(ctx) {
@@ -724,7 +730,9 @@ class EnemyTank extends Tank {
           (this.lineOfFirePoint[1] >= object.sides.top &&
           this.lineOfFirePoint[1] <= object.sides.bottom)) {
           if (object === this.game.playerOne) {
-            this.fire();
+            this.seesPlayerOne = true;
+          } else {
+            this.seesPlayerOne = false;
           }
         this.lineOfFirePoint = [this.aimX, this.aimY];
         this.pixelsAwayFromCannon = 0;
@@ -736,7 +744,15 @@ class EnemyTank extends Tank {
       (this.aimY + (this.cannonSlope[1] * this.pixelsAwayFromCannon))
     ];
 
-    this.pixelsAwayFromCannon = this.pixelsAwayFromCannon + 5;
+    this.pixelsAwayFromCannon = this.pixelsAwayFromCannon + 10;
+  }
+
+  attackAI() {
+    if (this.seesPlayerOne) {
+      console.log('inside attackAI');
+      this.fire();
+      setTimeout(this.attackAI, 3000);
+    }
   }
 
 }

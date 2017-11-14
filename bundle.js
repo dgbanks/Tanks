@@ -247,8 +247,13 @@ class Game {
   moveObjects(direction) {
     this.getMovingObjects().forEach(object => {
         let props;
-        if (object instanceof Tank) {
+        if (object instanceof PlayerOne) {
+            // console.log('playerOne');
             props = direction;
+        } else if (object instanceof EnemyTank) {
+          // console.log('EnemyTank');
+            props = this.enemy.moveDirection;
+            // console.log(props);
         } else {
             props = object.slope;
         }
@@ -340,7 +345,7 @@ class Tank {
     this.game = game;
     this.moveDirection = [0, 0];
     this.width = 50;
-    this.speed = 15;
+    this.speed = 5;
     this.cannonSlope = [0, 0];
   }
 
@@ -428,13 +433,21 @@ class Tank {
   move(direction) {
     if (!this.canMove(direction)) {
       direction = [0, 0];
+
+      if (this === this.game.enemy) {
+        this.moveDirection = this.getNewDirection();
+        return;
+      }
     }
 
     direction = [(direction[0] * this.speed), (direction[1] * this.speed)];
 
     this.pos = [(this.pos[0] + direction[0]), (this.pos[1] + direction[1])];
     this.sides = this.getSides();
-    this.moveDirection = [0, 0];
+
+    if (this === this.game.playerOne) {
+      this.moveDirection = [0, 0];
+    }
   }
 
   swivelCannon(mousePos) {
@@ -549,7 +562,6 @@ module.exports = Tank;
 
   start() {
     this.bindKeys();
-
     this.listenForMouse();
     this.listenForClick();
 
@@ -676,21 +688,21 @@ class EnemyTank extends Tank {
   constructor(game) {
     super(game);
 
-    this.pos = DEFAULTS.pos;
-    this.color = DEFAULTS.color;
+    this.pos = EnemyTank.DEFAULTS.pos;
+    this.color = EnemyTank.DEFAULTS.color;
     this.aimX = (this.pos[0] - 35);
     this.aimY = this.pos[1];
+    this.speed = 1;
+
+    this.sides = this.getSides();
+    this.moveDirection = this.getNewDirection();
 
     this.lineOfFirePoint = [this.aimX, this.aimY];
     this.pixelsAwayFromCannon = 1;
 
-    this.sides = this.getSides();
+    setInterval(() => { this.cannonAI(); }, 1);
 
-    this.move(Object.keys(MOVES)[Math.floor(Math.random() * 4)]);
-
-    setInterval(() => {
-      this.whatAmILookingAt();
-    }, 100);
+    console.log(this.getNewDirection());
   }
 
   drawLine(ctx) {
@@ -698,11 +710,13 @@ class EnemyTank extends Tank {
     ctx.beginPath();
     ctx.arc(this.lineOfFirePoint[0], this.lineOfFirePoint[1], 5, 0, (2 * Math.PI), false);
     ctx.stroke();
-    // ctx.fill();
   }
 
-  whatAmILookingAt() {
+  getNewDirection() {
+    return EnemyTank.MOVES[(Object.keys(EnemyTank.MOVES)[Math.floor(Math.random() * 4)])];
+  }
 
+  cannonAI() {
     let objects = [].concat(this.game.coverOnly, [this.game.playerOne]);
 
     objects.forEach(object => {
@@ -717,29 +731,25 @@ class EnemyTank extends Tank {
         this.pixelsAwayFromCannon = 1;
       }
     });
-      this.lineOfFirePoint = [
-        (this.aimX + (this.cannonSlope[0] * this.pixelsAwayFromCannon)),
-        (this.aimY + (this.cannonSlope[1] * this.pixelsAwayFromCannon))
-      ];
-      this.pixelsAwayFromCannon = this.pixelsAwayFromCannon + 1;
 
-  }
+    this.lineOfFirePoint = [
+      (this.aimX + (this.cannonSlope[0] * this.pixelsAwayFromCannon)),
+      (this.aimY + (this.cannonSlope[1] * this.pixelsAwayFromCannon))
+    ];
 
-  move() {
-    Object.keys(MOVES)[Math.floor(Math.random() * 4)]
-    // this.whatAmILookingAt();
+    this.pixelsAwayFromCannon = this.pixelsAwayFromCannon + 1;
   }
 
 }
 
 module.exports = EnemyTank;
 
-const DEFAULTS = {
+EnemyTank.DEFAULTS = {
   color: 'red',
   pos: [755, 300]
 };
 
-const MOVES = {
+EnemyTank.MOVES = {
   up: [0, -1],
   left: [-1, 0],
   right: [0, 1],

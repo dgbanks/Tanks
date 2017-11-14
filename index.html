@@ -24,6 +24,14 @@
         padding: 5px;
       }
 
+      .game-info {
+        /*border: 1px solid black;*/
+        margin-top: 50px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
     </style>
   </head>
   <body>
@@ -36,12 +44,14 @@
         <h4>Aim with the cursor</h4>
         <h4>Click to shoot</h4>
       </div>
-      <div>
-        <h1></h1> 
+      <div class='game-info'>
+        <h1 id='outcome'></h1>
+        <!-- <button type="button" name="button" onclick="history.go(0)">New Game</button> -->
       </div>
     </div>
 
     <canvas height="600" width="800" id='game-map'></canvas>
+    
     <script src="keymaster.js"></script>
     <script type="text/javascript" src="bundle.js"></script>
   </body>

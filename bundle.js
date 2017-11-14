@@ -200,6 +200,7 @@ class Game {
     this.coverOnly = [];
     this.explosions = [];
     this.outcome;
+    console.log('newgame');
   }
 
   addTank() {
@@ -328,19 +329,19 @@ class Game {
 
 
     // render the player's aim
-    ctx.beginPath();
-    ctx.moveTo(this.playerOne.pos[0], this.playerOne.pos[1]);
-    ctx.lineTo(mouseObject.mousePos[0], mouseObject.mousePos[1]);
-    ctx.strokeStyle = 'white';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(this.enemy.pos[0], this.enemy.pos[1]);
-    ctx.lineTo(this.playerOne.pos[0], this.playerOne.pos[1]);
-    ctx.strokeStyle = 'yellow';
-    ctx.lineWidth = 1;
-    ctx.stroke();
+    // ctx.beginPath();
+    // ctx.moveTo(this.playerOne.pos[0], this.playerOne.pos[1]);
+    // ctx.lineTo(mouseObject.mousePos[0], mouseObject.mousePos[1]);
+    // ctx.strokeStyle = 'white';
+    // ctx.lineWidth = 1;
+    // ctx.stroke();
+    //
+    // ctx.beginPath();
+    // ctx.moveTo(this.enemy.pos[0], this.enemy.pos[1]);
+    // ctx.lineTo(this.playerOne.pos[0], this.playerOne.pos[1]);
+    // ctx.strokeStyle = 'yellow';
+    // ctx.lineWidth = 1;
+    // ctx.stroke();
 
   }
 }
@@ -576,6 +577,8 @@ module.exports = Tank;
 
     this.setMousePosition = this.setMousePosition.bind(this);
     this.handleClick = this.handleClick.bind(this);
+
+    console.log('new gameView');
   }
 
   listenForMouse() {
@@ -605,6 +608,12 @@ module.exports = Tank;
     });
   }
 
+  displayOutcome() {
+    document.getElementById('outcome').innerHTML = `${this.game.outcome}`;
+    // document.getElementById('new-game-button').innerHTML = 'New Game';
+    // this.game = new Game({dimensions: [canvas.width, canvas.height]});
+  }
+
   start() {
     this.bindKeys();
     this.listenForMouse();
@@ -620,6 +629,8 @@ module.exports = Tank;
 
     if (!this.game.outcome) {
       requestAnimationFrame(this.animate.bind(this));
+    } else {
+      this.displayOutcome();
     }
   }
 

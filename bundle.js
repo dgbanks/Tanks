@@ -140,6 +140,7 @@ class Bullet {
       this.game.remove(object);
       this.explosionTimeout = 750;
       this.pos = object.pos;
+      setTimeout(() => { object.pos = undefined; }, 500);
     }
   }
 
@@ -198,6 +199,7 @@ class Game {
     this.barriers = [];
     this.coverOnly = [];
     this.explosions = [];
+    this.outcome;
   }
 
   addTank() {
@@ -243,13 +245,19 @@ class Game {
   }
 
   remove(object) {
-
     if (object instanceof Barrier) {
       return;
     } else if (object instanceof Tank) {
       this.tanks = this.tanks.filter(tank => (
         tank !== object
       ));
+      this.bullets.forEach(bullet => {
+        if (bullet.owner === object) {
+          bullet.explode();
+        }
+      });
+      // object.pos = undefined;
+      this.gameOver();
     } else if (object instanceof Bullet) {
       this.bullets = this.bullets.filter(bullet => (
         object !== bullet
@@ -259,7 +267,18 @@ class Game {
         object !== explosion
       ));
     }
+  }
 
+  gameOver() {
+    if (this.tanks.length === 1) {
+      if (this.tanks[0] instanceof PlayerOne) {
+        this.outcome = 'You win!';
+        console.log('You win!');
+      } else {
+        this.outcome = 'You lose!';
+        console.log('You lose!');
+      }
+    }
   }
 
   getMovingObjects() {
@@ -299,9 +318,14 @@ class Game {
       object.draw(ctx);
     });
 
+    this.playerOne.swivelCannon(mouseObject.mousePos);
+    this.enemy.swivelCannon(this.playerOne.pos);
+
     this.explosions.forEach(explosion => {
       explosion.draw(ctx);
     });
+
+
 
     // render the player's aim
     ctx.beginPath();
@@ -318,8 +342,6 @@ class Game {
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    this.playerOne.swivelCannon(mouseObject.mousePos);
-    this.enemy.swivelCannon(this.playerOne.pos);
   }
 }
 
@@ -496,13 +518,15 @@ class Tank {
   }
 
   fire() {
-    const bullet = new Bullet({
-      game: this.game,
-      owner: this,
-      tankPos: this.pos,
-      slope: this.cannonSlope
-    });
-    this.game.addBullet(bullet);
+    if (this.pos) {
+      const bullet = new Bullet({
+        game: this.game,
+        owner: this,
+        tankPos: this.pos,
+        slope: this.cannonSlope
+      });
+      this.game.addBullet(bullet);
+    }
   }
 
   draw(ctx) {
@@ -594,7 +618,9 @@ module.exports = Tank;
     this.game.drawEverything(this.context, {mousePos: this.mousePos});
     // this.enemy.drawLine(this.context);
 
-    requestAnimationFrame(this.animate.bind(this));
+    if (!this.game.outcome) {
+      requestAnimationFrame(this.animate.bind(this));
+    }
   }
 
 }

@@ -75,7 +75,6 @@ class Bullet {
     this.owner = props.owner;
     this.pos = props.tankPos;
     this.slope = props.slope;
-    // this.mousePos = props.mousePos;
     this.targets = this.owner.idEnemies();
     this.speed = 5;
     this.radius = 5;
@@ -560,6 +559,7 @@ module.exports = Tank;
   animate() {
     this.game.moveObjects(this.tank.moveDirection);
     this.game.drawEverything(this.context, {mousePos: this.mousePos});
+    this.enemy.drawLine(this.context);
 
     requestAnimationFrame(this.animate.bind(this));
   }
@@ -672,18 +672,6 @@ module.exports = PlayerOne;
 
 const Tank = __webpack_require__(4);
 
-const DEFAULTS = {
-  color: 'red',
-  pos: [755, 300]
-};
-
-const MOVES = {
-  up: [0, -1],
-  left: [-1, 0],
-  right: [0, 1],
-  down: [1, 0]
-};
-
 class EnemyTank extends Tank {
   constructor(game) {
     super(game);
@@ -702,7 +690,15 @@ class EnemyTank extends Tank {
 
     setInterval(() => {
       this.whatAmILookingAt();
-    }, 1);
+    }, 100);
+  }
+
+  drawLine(ctx) {
+    ctx.strokeStyle = 'yellow';
+    ctx.beginPath();
+    ctx.arc(this.lineOfFirePoint[0], this.lineOfFirePoint[1], 5, 0, (2 * Math.PI), false);
+    ctx.stroke();
+    // ctx.fill();
   }
 
   whatAmILookingAt() {
@@ -714,19 +710,18 @@ class EnemyTank extends Tank {
           this.lineOfFirePoint[0] <= object.sides.right) &&
           (this.lineOfFirePoint[1] >= object.sides.top &&
           this.lineOfFirePoint[1] <= object.sides.bottom)) {
-        if (object === this.game.playerOne) {
-          this.fire();
-        }
+          if (object === this.game.playerOne) {
+            this.fire();
+          }
         this.lineOfFirePoint = [this.aimX, this.aimY];
         this.pixelsAwayFromCannon = 1;
       }
     });
-
-    this.lineOfFirePoint = [
-      (this.aimX + (this.cannonSlope[0] * this.pixelsMoved)),
-      (this.aimY + (this.cannonSlope[1] * this.pixelsMoved))
-    ];
-    this.pixelsMoved = this.pixelsMoved + 1;
+      this.lineOfFirePoint = [
+        (this.aimX + (this.cannonSlope[0] * this.pixelsAwayFromCannon)),
+        (this.aimY + (this.cannonSlope[1] * this.pixelsAwayFromCannon))
+      ];
+      this.pixelsAwayFromCannon = this.pixelsAwayFromCannon + 1;
 
   }
 
@@ -738,6 +733,18 @@ class EnemyTank extends Tank {
 }
 
 module.exports = EnemyTank;
+
+const DEFAULTS = {
+  color: 'red',
+  pos: [755, 300]
+};
+
+const MOVES = {
+  up: [0, -1],
+  left: [-1, 0],
+  right: [0, 1],
+  down: [1, 0]
+};
 
 
 /***/ })

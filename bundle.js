@@ -65,7 +65,9 @@
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
+
+const Explosion = __webpack_require__(7);
 
 class Bullet {
   constructor(props) {
@@ -78,6 +80,7 @@ class Bullet {
     this.slope = this.calcSlope();
     this.radius = 5;
     this.color = 'white';
+    this.explosionTimeout = 300;
   }
 
   calcSlope() {
@@ -91,18 +94,19 @@ class Bullet {
       slope = [(slope[0] / Math.abs(slope[1])),
               (slope[1] / Math.abs(slope[1]))];
     }
-
     return slope;
   }
 
-  move() {
-    let slope = this.slope;
-
+  move(slope) {
     slope = [(slope[0] * this.speed), (slope[1] * this.speed)];
     this.pos = [(this.pos[0] + slope[0]), (this.pos[1] + slope[1])];
+
+    if (this.hasCollided([].concat(this.targets, this.game.barriers))) {
+      this.explode();
+    }
   }
 
-  willCollide(objects) {
+  hasCollided(objects) {
     let bool;
 
     objects.forEach(object => {
@@ -115,16 +119,30 @@ class Bullet {
       )) {
 
         bool = true;
-
-        this.game.remove(object);
-
+        this.hitsEnemy(object);
+        return;
       }
     });
 
     return bool;
   }
 
+  hitsEnemy(object) {
+    if (this.targets.includes(object)) {
+      this.game.remove(object);
+      this.explosionTimeout = 750;
+      this.pos = object.pos;
+    }
+  }
 
+  explode() {
+    this.game.remove(this);
+
+    const explosion = new Explosion(this.pos);
+    this.game.explosions.push(explosion);
+    setTimeout(() => { this.game.remove(explosion); }, this.explosionTimeout);
+    console.log(this.game.tanks);
+  }
 
   draw(ctx) {
     ctx.fillStyle = this.color;
@@ -241,20 +259,13 @@ class Game {
 
   moveObjects(direction) {
     this.getMovingObjects().forEach(object => {
+        let props;
         if (object instanceof Tank) {
-            object.move(direction);
-            object.moveDirection = [0, 0];
+            props = direction;
         } else {
-            object.move();
-            if (object.willCollide([].concat(object.targets, this.barriers))) {
-
-              const explosion = new Explosion(object.pos);
-              this.explosions.push(explosion);
-              setTimeout(() => { this.remove(explosion); }, 300);
-
-              this.remove(object);
-            }
+            props = object.slope;
         }
+        object.move(props);
     });
   }
 
@@ -353,30 +364,6 @@ class Tank {
     };
   }
 
-  draw(ctx) {
-    // tank body
-    ctx.fillStyle = this.color;
-    ctx.fillRect(
-      (this.pos[0] - (this.width / 2)),
-      (this.pos[1] - (this.width / 2)),
-      this.width,
-      this.width);
-
-    // tank center
-    ctx.fillStyle = 'white';
-    ctx.beginPath();
-    ctx.arc(this.pos[0], this.pos[1], 5, 0, (2 * Math.PI), false);
-    ctx.fill();
-
-    // tank cannon
-    ctx.beginPath();
-    ctx.moveTo(this.pos[0], this.pos[1]);
-    ctx.lineTo(this.aimX, this.aimY);
-    ctx.strokeStyle = 'white';
-    ctx.lineWidth = 5;
-    ctx.stroke();
-  }
-
   canMove(direction) {
     let bool = true;
 
@@ -444,7 +431,6 @@ class Tank {
   }
 
   move(direction) {
-
     if (!this.canMove(direction)) {
       direction = [0, 0];
     }
@@ -453,7 +439,7 @@ class Tank {
 
     this.pos = [(this.pos[0] + direction[0]), (this.pos[1] + direction[1])];
     this.sides = this.getSides();
-    console.log(this.pos);
+    this.moveDirection = [0, 0];
   }
 
   swivelCannon(mousePos) {
@@ -469,6 +455,31 @@ class Tank {
     const bullet = new Bullet({ game: this.game, owner: this, mousePos: mousePos, tankPos: this.pos });
     this.game.addBullet(bullet);
   }
+
+  draw(ctx) {
+    // tank body
+    ctx.fillStyle = this.color;
+    ctx.fillRect(
+      (this.pos[0] - (this.width / 2)),
+      (this.pos[1] - (this.width / 2)),
+      this.width,
+      this.width);
+
+    // tank center
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.arc(this.pos[0], this.pos[1], 5, 0, (2 * Math.PI), false);
+    ctx.fill();
+
+    // tank cannon
+    ctx.beginPath();
+    ctx.moveTo(this.pos[0], this.pos[1]);
+    ctx.lineTo(this.aimX, this.aimY);
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 5;
+    ctx.stroke();
+  }
+
 }
 
 module.exports = Tank;

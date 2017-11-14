@@ -433,7 +433,6 @@ class Tank {
   move(direction) {
     if (!this.canMove(direction)) {
       direction = [0, 0];
-
       if (this === this.game.enemy) {
         this.moveDirection = this.getNewDirection();
         return;
@@ -690,15 +689,15 @@ class EnemyTank extends Tank {
 
     this.pos = EnemyTank.DEFAULTS.pos;
     this.color = EnemyTank.DEFAULTS.color;
+    this.speed = EnemyTank.DEFAULTS.speed;
     this.aimX = (this.pos[0] - 35);
     this.aimY = this.pos[1];
-    this.speed = 1;
 
     this.sides = this.getSides();
     this.moveDirection = this.getNewDirection();
 
     this.lineOfFirePoint = [this.aimX, this.aimY];
-    this.pixelsAwayFromCannon = 1;
+    this.pixelsAwayFromCannon = 0;
 
     setInterval(() => { this.cannonAI(); }, 1);
 
@@ -728,7 +727,7 @@ class EnemyTank extends Tank {
             this.fire();
           }
         this.lineOfFirePoint = [this.aimX, this.aimY];
-        this.pixelsAwayFromCannon = 1;
+        this.pixelsAwayFromCannon = 0;
       }
     });
 
@@ -737,7 +736,7 @@ class EnemyTank extends Tank {
       (this.aimY + (this.cannonSlope[1] * this.pixelsAwayFromCannon))
     ];
 
-    this.pixelsAwayFromCannon = this.pixelsAwayFromCannon + 1;
+    this.pixelsAwayFromCannon = this.pixelsAwayFromCannon + 5;
   }
 
 }
@@ -746,7 +745,8 @@ module.exports = EnemyTank;
 
 EnemyTank.DEFAULTS = {
   color: 'red',
-  pos: [755, 300]
+  pos: [755, 300],
+  speed: 1
 };
 
 EnemyTank.MOVES = {

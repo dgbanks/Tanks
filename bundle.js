@@ -74,27 +74,13 @@ class Bullet {
     this.game = props.game;
     this.owner = props.owner;
     this.pos = props.tankPos;
-    this.mousePos = props.mousePos;
+    this.slope = props.slope;
+    // this.mousePos = props.mousePos;
     this.targets = this.owner.idEnemies();
     this.speed = 5;
-    this.slope = this.calcSlope();
     this.radius = 5;
     this.color = 'white';
     this.explosionTimeout = 300;
-  }
-
-  calcSlope() {
-    let slope = [(this.mousePos[0] - this.pos[0]),
-                (this.mousePos[1] - this.pos[1])];
-
-    if (Math.abs(slope[0]) >= Math.abs(slope[1])) {
-      slope = [(slope[0] / Math.abs(slope[0])),
-              (slope[1] / Math.abs(slope[0]))];
-    } else {
-      slope = [(slope[0] / Math.abs(slope[1])),
-              (slope[1] / Math.abs(slope[1]))];
-    }
-    return slope;
   }
 
   move(slope) {
@@ -189,6 +175,7 @@ class Game {
     this.tanks = [];
     this.bullets = [];
     this.barriers = [];
+    this.coverOnly = [];
     this.explosions = [];
   }
 
@@ -229,6 +216,7 @@ class Game {
       new Barrier(390, 350, 20, 150)
     ];
 
+    this.coverOnly = [].concat(startingCover, levelOne);
     this.barriers = [].concat(boundaries, startingCover, levelOne);
     return this.barriers;
   }
@@ -294,6 +282,13 @@ class Game {
     ctx.moveTo(this.playerOne.pos[0], this.playerOne.pos[1]);
     ctx.lineTo(mouseObject.mousePos[0], mouseObject.mousePos[1]);
     ctx.strokeStyle = 'white';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(this.enemy.pos[0], this.enemy.pos[1]);
+    ctx.lineTo(this.playerOne.pos[0], this.playerOne.pos[1]);
+    ctx.strokeStyle = 'yellow';
     ctx.lineWidth = 1;
     ctx.stroke();
 
@@ -449,10 +444,30 @@ class Tank {
 
     this.aimX = this.pos[0] + (35 * Math.cos(magic));
     this.aimY = this.pos[1] + (35 * Math.sin(magic));
+
+    /// borrowed from Bullet class
+
+    let slope = [(this.aimX - this.pos[0]),
+                (this.aimY - this.pos[1])];
+
+    if (Math.abs(slope[0]) >= Math.abs(slope[1])) {
+      slope = [(slope[0] / Math.abs(slope[0])),
+              (slope[1] / Math.abs(slope[0]))];
+    } else {
+      slope = [(slope[0] / Math.abs(slope[1])),
+              (slope[1] / Math.abs(slope[1]))];
+    }
+
+    this.cannonSlope = slope;
   }
 
   fire(mousePos) {
-    const bullet = new Bullet({ game: this.game, owner: this, mousePos: mousePos, tankPos: this.pos });
+    const bullet = new Bullet({
+      game: this.game,
+      owner: this, 
+      tankPos: this.pos,
+      slope: this.cannonSlope
+    });
     this.game.addBullet(bullet);
   }
 
@@ -511,7 +526,6 @@ module.exports = Tank;
 
   setMousePosition(event) {
     this.mousePos = [(event.clientX - 350), (event.clientY - 50)];
-    // this.tank.swivelCannon(this.mousePos);
   }
 
   listenForClick() {
@@ -539,7 +553,7 @@ module.exports = Tank;
     this.listenForMouse();
     this.listenForClick();
 
-    requestAnimationFrame(this.animate.bind(this));
+    this.animate();
   }
 
   animate() {
@@ -675,7 +689,7 @@ class EnemyTank extends Tank {
 
     this.pos = DEFAULTS.pos;
     this.color = DEFAULTS.color;
-    this.aimX = this.pos[0] - 35;
+    this.aimX = (this.pos[0] - 35);
     this.aimY = this.pos[1];
 
     this.sides = this.getSides();
@@ -685,8 +699,21 @@ class EnemyTank extends Tank {
     this.move(Object.keys(MOVES)[Math.floor(Math.random() * 4)]);
   }
 
+  whatAmILookingAt() {
+    // console.log([this.aimX, this.aimY]);
+    // console.log('slope', (this.pos[1] - this.aimY)/(this.pos[0] - this.aimX));
+
+    console.log(slope);
+    console.log(this.cannonSlope);
+
+
+
+
+  }
+
   move() {
     Object.keys(MOVES)[Math.floor(Math.random() * 4)]
+    this.whatAmILookingAt();
   }
 
 }

@@ -60,330 +60,14 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 1);
+/******/ 	return __webpack_require__(__webpack_require__.s = 3);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-const Explosion = __webpack_require__(7);
-
-class Bullet {
-  constructor(props) {
-    this.game = props.game;
-    this.owner = props.owner;
-    this.pos = props.tankPos;
-    this.slope = props.slope;
-    this.targets = this.owner.idEnemies();
-    this.speed = 5;
-    this.radius = 5;
-    this.color = 'white';
-    this.explosionTimeout = 300;
-  }
-
-  move(slope) {
-    slope = [(slope[0] * this.speed), (slope[1] * this.speed)];
-    this.pos = [(this.pos[0] + slope[0]), (this.pos[1] + slope[1])];
-
-    let otherBullets = this.game.bullets.filter(bullet => (bullet !== this));
-    if (this.hasCollided([].concat(this.targets, this.game.barriers, otherBullets))) {
-      this.explode();
-    }
-  }
-
-  hasCollided(objects) {
-    let bool;
-
-
-    objects.forEach(object => {
-      let objectDimensions;
-
-      if (object instanceof Bullet) {
-        objectDimensions = {
-          top: (object.pos[1] - object.radius),
-          right: (object.pos[0] + object.radius),
-          bottom: (object.pos[1] + object.radius),
-          left: (object.pos[0] - object.radius)
-        }
-      } else {
-        objectDimensions = {
-          top: object.sides.top,
-          right: object.sides.right,
-          bottom: object.sides.bottom,
-          left: object.sides.left
-        };
-      }
-
-      if ((
-        (this.pos[0] + this.radius) >= objectDimensions.left &&
-        (this.pos[0] - this.radius) <= objectDimensions.right
-      ) && (
-        (this.pos[1] + this.radius) >= objectDimensions.top &&
-        (this.pos[1] - this.radius) <= objectDimensions.bottom
-      )) {
-        bool = true;
-        this.hitsEnemy(object);
-        return;
-      }
-    });
-
-    return bool;
-  }
-
-  hitsEnemy(object) {
-    if (object instanceof Bullet) {
-      object.explode();
-    }
-
-    if (this.targets.includes(object)) {
-      this.game.remove(object);
-      this.explosionTimeout = 750;
-      this.pos = object.pos;
-      setTimeout(() => { object.pos = undefined; }, 500);
-    }
-  }
-
-  explode() {
-    this.game.remove(this);
-
-    const explosion = new Explosion(this.pos);
-    this.game.explosions.push(explosion);
-    setTimeout(() => { this.game.remove(explosion); }, this.explosionTimeout);
-  }
-
-  draw(ctx) {
-    ctx.fillStyle = this.color;
-    ctx.beginPath();
-    ctx.arc(this.pos[0], this.pos[1], this.radius, 0, (2 * Math.PI), false);
-    ctx.fill();
-  }
-
-}
-
-module.exports = Bullet;
-
-
-/***/ }),
-/* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const Game = __webpack_require__(2);
-const GameView = __webpack_require__(5);
-
-document.addEventListener("DOMContentLoaded", function(){
-  const canvas = document.getElementById('game-map');
-  const context = canvas.getContext('2d');
-
-  const game = new Game({dimensions: [canvas.width, canvas.height]});
-  new GameView(game, context, canvas).start();
-});
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const Tank = __webpack_require__(4);
-const PlayerOne = __webpack_require__(8);
-const EnemyTank = __webpack_require__(9);
-const Barrier = __webpack_require__(3);
-const Bullet = __webpack_require__(0);
-const Explosion = __webpack_require__(7);
-
-class Game {
-  constructor(canvas) {
-    this.dimensions = canvas.dimensions;
-    this.tanks = [];
-    this.bullets = [];
-    this.barriers = [];
-    this.coverOnly = [];
-    this.explosions = [];
-    this.outcome;
-    console.log('newgame');
-  }
-
-  addTank() {
-    const tank = new PlayerOne(this);
-    this.tanks.push(tank);
-    this.playerOne = tank;
-    return tank;
-  }
-
-  addEnemies() {
-    const tank = new EnemyTank(this);
-    this.tanks.push(tank);
-    this.enemy = tank;
-    return tank;
-  }
-
-  addBullet(bullet) {
-    this.bullets.push(bullet);
-    return bullet;
-  }
-
-  addBarriers() {
-    const boundaries = [
-      new Barrier(0, 0, 800, 10),
-      new Barrier(0, 590, 800, 10),
-      new Barrier(0, 10, 10, 580),
-      new Barrier(790, 10, 10, 580)
-    ];
-
-    const startingCover = [
-      new Barrier(100, 250, 20, 100),
-      new Barrier(680, 250, 20, 100)
-    ];
-
-    const levelOne = [
-      new Barrier(390, 100, 20, 150),
-      new Barrier(390, 350, 20, 150)
-    ];
-
-    this.coverOnly = [].concat(startingCover, levelOne);
-    this.barriers = [].concat(boundaries, startingCover, levelOne);
-    return this.barriers;
-  }
-
-  remove(object) {
-    if (object instanceof Barrier) {
-      return;
-    } else if (object instanceof Tank) {
-      this.tanks = this.tanks.filter(tank => (
-        tank !== object
-      ));
-      this.bullets.forEach(bullet => {
-        if (bullet.owner === object) {
-          bullet.explode();
-        }
-      });
-      // object.pos = undefined;
-      this.gameOver();
-    } else if (object instanceof Bullet) {
-      this.bullets = this.bullets.filter(bullet => (
-        object !== bullet
-      ));
-    } else if (object instanceof Explosion) {
-      this.explosions = this.explosions.filter(explosion => (
-        object !== explosion
-      ));
-    }
-  }
-
-  gameOver() {
-    if (this.tanks.length === 1) {
-      if (this.tanks[0] instanceof PlayerOne) {
-        this.outcome = 'You win!';
-        console.log('You win!');
-      } else {
-        this.outcome = 'You lose!';
-        console.log('You lose!');
-      }
-    }
-  }
-
-  getMovingObjects() {
-    return [].concat(this.tanks, this.bullets);
-  }
-
-  moveObjects(direction) {
-    this.getMovingObjects().forEach(object => {
-        let props;
-        if (object instanceof PlayerOne) {
-            // console.log('playerOne');
-            props = direction;
-        } else if (object instanceof EnemyTank) {
-          // console.log('EnemyTank');
-            props = this.enemy.moveDirection;
-            // console.log(props);
-        } else {
-            props = object.slope;
-        }
-        object.move(props);
-    });
-  }
-
-  drawEverything(ctx, mouseObject) {
-    // render the canvas
-    ctx.clearRect(0, 0, this.dimensions[0], this.dimensions[1]);
-    ctx.fillStyle = 'black';
-    ctx.fillRect(0, 0, this.dimensions[0], this.dimensions[1]);
-
-    // render barriers and boundaries
-    this.barriers.forEach(barrier => {
-      barrier.draw(ctx);
-    });
-
-    // render moving objects
-    this.getMovingObjects().forEach(object => {
-      object.draw(ctx);
-    });
-
-    this.playerOne.swivelCannon(mouseObject.mousePos);
-    this.enemy.swivelCannon(this.playerOne.pos);
-
-    this.explosions.forEach(explosion => {
-      explosion.draw(ctx);
-    });
-
-
-
-    // render the player's aim
-    // ctx.beginPath();
-    // ctx.moveTo(this.playerOne.pos[0], this.playerOne.pos[1]);
-    // ctx.lineTo(mouseObject.mousePos[0], mouseObject.mousePos[1]);
-    // ctx.strokeStyle = 'white';
-    // ctx.lineWidth = 1;
-    // ctx.stroke();
-    //
-    // ctx.beginPath();
-    // ctx.moveTo(this.enemy.pos[0], this.enemy.pos[1]);
-    // ctx.lineTo(this.playerOne.pos[0], this.playerOne.pos[1]);
-    // ctx.strokeStyle = 'yellow';
-    // ctx.lineWidth = 1;
-    // ctx.stroke();
-
-  }
-}
-
-module.exports = Game;
-
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports) {
-
-class Barrier {
-
-  constructor(xPos, yPos, width, height) {
-    this.xPos = xPos;
-    this.yPos = yPos;
-    this.width = width;
-    this.height = height;
-
-    this.sides = {
-      top: this.yPos,
-      right: (this.xPos + this.width),
-      bottom: (this.yPos + this.height),
-      left: this.xPos
-    };
-  }
-
-  draw(ctx) {
-    ctx.fillStyle = 'red';
-    ctx.fillRect(this.xPos, this.yPos, this.width, this.height);
-  }
-
-}
-
-module.exports = Barrier;
-
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const Bullet = __webpack_require__(0);
+const Bullet = __webpack_require__(1);
 
 class Tank {
   constructor(game) {
@@ -392,6 +76,8 @@ class Tank {
     this.width = 50;
     this.speed = 5;
     this.cannonSlope = [0, 0];
+
+    this.bullets = 0;
   }
 
   idEnemies() {
@@ -478,7 +164,7 @@ class Tank {
   move(direction) {
     if (!this.canMove(direction)) {
       direction = [0, 0];
-      if (this === this.game.enemy) {
+      if (this.game.enemies.includes(this)) {
         this.moveDirection = this.getNewDirection();
         return;
       }
@@ -519,15 +205,20 @@ class Tank {
   }
 
   fire() {
-    if (this.pos) {
-      const bullet = new Bullet({
-        game: this.game,
-        owner: this,
-        tankPos: this.pos,
-        slope: this.cannonSlope
-      });
-      this.game.addBullet(bullet);
-    }
+    // console.log(this.game.tanks);
+    // if (!this.game.outcome) {
+      if (this.game.tanks.includes(this) && this.bullets < 5) {
+        console.log(this.color, 'firing');
+        this.bullets = this.bullets + 1;
+        const bullet = new Bullet({
+          game: this.game,
+          owner: this,
+          tankPos: this.pos,
+          slope: this.cannonSlope
+        });
+        this.game.addBullet(bullet);
+      }
+    // }
   }
 
   draw(ctx) {
@@ -560,7 +251,538 @@ module.exports = Tank;
 
 
 /***/ }),
+/* 1 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Explosion = __webpack_require__(2);
+
+class Bullet {
+  constructor(props) {
+    this.game = props.game;
+    this.owner = props.owner;
+    this.pos = props.tankPos;
+    this.slope = props.slope;
+    this.targets = this.owner.idEnemies();
+    this.speed = 5;
+    this.radius = 5;
+    this.color = 'white';
+    this.explosionTimeout = 300;
+    console.log('hello', this.owner.color, this.owner.bullets);
+  }
+
+  move(slope) {
+    slope = [(slope[0] * this.speed), (slope[1] * this.speed)];
+    this.pos = [(this.pos[0] + slope[0]), (this.pos[1] + slope[1])];
+
+    let otherBullets = this.game.bullets.filter(bullet => (bullet !== this));
+    if (this.hasCollided([].concat(this.targets, this.game.barriers, otherBullets))) {
+      this.explode();
+    }
+  }
+
+  hasCollided(objects) {
+    let bool;
+
+
+    objects.forEach(object => {
+      let objectDimensions;
+
+      if (object instanceof Bullet || object instanceof Explosion) {
+        objectDimensions = {
+          top: (object.pos[1] - object.radius),
+          right: (object.pos[0] + object.radius),
+          bottom: (object.pos[1] + object.radius),
+          left: (object.pos[0] - object.radius)
+        }
+      } else {
+        objectDimensions = {
+          top: object.sides.top,
+          right: object.sides.right,
+          bottom: object.sides.bottom,
+          left: object.sides.left
+        };
+      }
+
+      if ((
+        (this.pos[0] + this.radius) >= objectDimensions.left &&
+        (this.pos[0] - this.radius) <= objectDimensions.right
+      ) && (
+        (this.pos[1] + this.radius) >= objectDimensions.top &&
+        (this.pos[1] - this.radius) <= objectDimensions.bottom
+      )) {
+        bool = true;
+        this.hitsMovingObject(object);
+        // return;
+      }
+    });
+
+    return bool;
+  }
+
+  hitsMovingObject(object) {
+    if (object instanceof Bullet) {
+      object.explode();
+    }
+
+    if (this.targets.includes(object)) {
+      console.log('hits ', object);
+      this.game.remove(object);
+      // this.pos = object.pos;
+      this.explosionTimeout = 750;
+
+      console.log(`${this.owner.color} ${this.owner.bullets} hits ${object.color}`);
+      if (object !== this.game.playerOne) {
+        console.log(`${object.color}.pos FROM ${object.pos}`);
+        object.pos = undefined;
+        console.log(`${object.color}.pos TO ${object.pos}`);
+        // object.sides = undefined;
+
+        // setTimeout(() => { object.pos = undefined; }, 500);
+      }
+    }
+  }
+
+  explode() {
+    this.owner.bullets = this.owner.bullets - 1;
+    this.game.remove(this);
+
+    const explosion = new Explosion(this.pos);
+    this.game.explosions.push(explosion);
+    setTimeout(() => { this.game.remove(explosion); }, this.explosionTimeout);
+  }
+
+  draw(ctx) {
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.pos[0], this.pos[1], this.radius, 0, (2 * Math.PI), false);
+    ctx.fill();
+  }
+
+}
+
+module.exports = Bullet;
+
+
+/***/ }),
+/* 2 */
+/***/ (function(module, exports) {
+
+class Explosion {
+
+  constructor(pos) {
+    this.pos = pos;
+    this.radius = 0;
+    this.radiusTwo = 0;
+  }
+
+  draw(ctx) {
+    ctx.beginPath();
+    ctx.arc(this.pos[0], this.pos[1], this.radius, 0, (2 * Math.PI), false);
+    ctx.strokeStyle = 'red';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(this.pos[0], this.pos[1], this.radiusTwo, 0, (2 * Math.PI), false);
+    ctx.strokeStyle = 'orange';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    this.radius = this.radius + 1;
+    this.radiusTwo = this.radiusTwo + .5;
+  }
+
+}
+
+module.exports = Explosion;
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Game = __webpack_require__(4);
+const GameView = __webpack_require__(8);
+
+document.addEventListener("DOMContentLoaded", function(){
+  const canvas = document.getElementById('game-map');
+  const context = canvas.getContext('2d');
+
+  // console.log('entry');
+  // const start = () => {
+  //   console.log('start');
+    const game = new Game({dimensions: [canvas.width, canvas.height]});
+    new GameView(game, context, canvas).start();
+  // };
+  // const gameView = new GameView(game, context, canvas);
+
+  // const button = document.createElement('button');
+  // button.onclick = gameView.start;
+  // const div = document.getElementById('game-info');
+  // div.innerHTML = '<button onclick="start">NewGame</button>';
+});
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Tank = __webpack_require__(0);
+const PlayerOne = __webpack_require__(5);
+const EnemyTank = __webpack_require__(6);
+const Barrier = __webpack_require__(7);
+const Bullet = __webpack_require__(1);
+const Explosion = __webpack_require__(2);
+
+class Game {
+  constructor(canvas) {
+    this.dimensions = canvas.dimensions;
+    this.tanks = [];
+    this.enemies = [];
+    this.bullets = [];
+    this.barriers = [];
+    this.coverOnly = [];
+    this.explosions = [];
+    this.outcome;
+    // console.log('newgame');
+  }
+
+  addTank() {
+    const tank = new PlayerOne(this);
+    this.tanks.push(tank);
+    this.playerOne = tank;
+    return tank;
+  }
+
+  addEnemies() {
+    const tank = new EnemyTank(this);
+    this.tanks.push(tank);
+    this.enemies.push(tank);
+    return tank;
+  }
+
+  addBullet(bullet) {
+    this.bullets.push(bullet);
+    return bullet;
+  }
+
+  addBarriers() {
+    const boundaries = [
+      new Barrier(0, 0, 800, 10),
+      new Barrier(0, 590, 800, 10),
+      new Barrier(0, 10, 10, 580),
+      new Barrier(790, 10, 10, 580)
+    ];
+
+    const startingCover = [
+      new Barrier(100, 250, 20, 100),
+      new Barrier(680, 250, 20, 100)
+    ];
+
+    const levelOne = [
+      new Barrier(390, 100, 20, 150),
+      new Barrier(390, 350, 20, 150)
+    ];
+
+    this.coverOnly = [].concat(startingCover, levelOne);
+    this.barriers = [].concat(boundaries, startingCover, levelOne);
+    return this.barriers;
+  }
+
+  remove(object) {
+    if (object instanceof Barrier) {
+      return;
+    } else if (object instanceof Tank) {
+      if (!this.tanks.includes(this.playerOne)) {
+        this.tanks.forEach(enemy => (enemy.seesPlayerOne = false ));
+      }
+      this.tanks = this.tanks.filter(tank => (
+        tank !== object
+      ));
+      // object = undefined;
+      // this.bullets.forEach(bullet => {
+      //   if (bullet.owner === object) {
+      //     bullet.explode();
+      //   }
+      // });
+      // object.pos = undefined;
+
+      // this.gameOver();
+      setTimeout(() => { this.gameOver(); }, 1000);
+
+    } else if (object instanceof Bullet) {
+      console.log('goodbye', object.owner.color, object.owner.bullets);
+      this.bullets = this.bullets.filter(bullet => (
+        object !== bullet
+      ));
+      object = undefined;
+    } else if (object instanceof Explosion) {
+      this.explosions = this.explosions.filter(explosion => (
+        object !== explosion
+      ));
+      object = undefined;
+    }
+  }
+
+  gameOver() {
+    console.log('inside gameOver');
+    // if (this.tanks.length === 1) {
+      if (this.tanks.length === 0) {
+        this.outcome = 'Draw!';
+      } else if (this.tanks.length === 1 && this.tanks[0] instanceof PlayerOne) {
+        this.outcome = 'You win!';
+        console.log('You win!');
+      } else if (!this.tanks.includes(this.playerOne)) {
+        this.outcome = 'You lose!';
+        console.log('You lose!');
+      }
+
+      // if (this.tanks.length === 1 && this.tanks[0] instanceof PlayerOne) {
+      //   this.outcome = 'You win!';
+      //   console.log('You win!');
+      // } else if (!this.tanks.includes(this.playerOne)) {
+      //   this.outcome = 'You lose!';
+      //   console.log('You lose!');
+      // } else if (this.tanks.length === 0) {
+      //   this.outcome = 'Draw!';
+      // }
+    // }
+  }
+
+  getMovingObjects() {
+    return [].concat(this.tanks, this.bullets);
+  }
+
+  moveObjects(direction) {
+    this.getMovingObjects().forEach(object => {
+        let props;
+        if (object instanceof PlayerOne) {
+            // console.log('playerOne');
+            props = direction;
+        } else if (object instanceof EnemyTank) {
+          // console.log('EnemyTank');
+            // RISKY
+            props = object.moveDirection;
+            // console.log(props);
+        } else {
+            props = object.slope;
+        }
+        object.move(props);
+    });
+  }
+
+  drawEverything(ctx, mouseObject) {
+    // render the canvas
+    ctx.clearRect(0, 0, this.dimensions[0], this.dimensions[1]);
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, this.dimensions[0], this.dimensions[1]);
+
+    // render barriers and boundaries
+    this.barriers.forEach(barrier => {
+      barrier.draw(ctx);
+    });
+
+    // render moving objects
+    this.getMovingObjects().forEach(object => {
+      object.draw(ctx);
+
+      if (object instanceof Tank) {
+        let props;
+        if (object instanceof PlayerOne) {
+          props = mouseObject.mousePos;
+        } else {
+          props = this.playerOne.pos;
+        }
+        object.swivelCannon(props);
+      }
+    });
+
+    // this.playerOne.swivelCannon(mouseObject.mousePos);
+    // this.enemy.swivelCannon(this.playerOne.pos);
+
+    this.explosions.forEach(explosion => {
+      explosion.draw(ctx);
+    });
+
+
+
+    // render the player's aim
+    // ctx.beginPath();
+    // ctx.moveTo(this.playerOne.pos[0], this.playerOne.pos[1]);
+    // ctx.lineTo(mouseObject.mousePos[0], mouseObject.mousePos[1]);
+    // ctx.strokeStyle = 'white';
+    // ctx.lineWidth = 1;
+    // ctx.stroke();
+    //
+    // ctx.beginPath();
+    // ctx.moveTo(this.enemy.pos[0], this.enemy.pos[1]);
+    // ctx.lineTo(this.playerOne.pos[0], this.playerOne.pos[1]);
+    // ctx.strokeStyle = 'yellow';
+    // ctx.lineWidth = 1;
+    // ctx.stroke();
+
+  }
+}
+
+module.exports = Game;
+
+
+/***/ }),
 /* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Tank = __webpack_require__(0);
+
+const DEFAULTS = {
+  color: 'blue',
+  pos: [45, 300]
+};
+
+class PlayerOne extends Tank {
+  constructor(game) {
+    super(game);
+
+    this.pos = DEFAULTS.pos;
+    this.color = DEFAULTS.color;
+    this.aimX = this.pos[0] + 35;
+    this.aimY = this.pos[1];
+    this.sides = this.getSides();
+    // this.enemies = this.idEnemies();
+  }
+
+}
+
+module.exports = PlayerOne;
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const Tank = __webpack_require__(0);
+
+class EnemyTank extends Tank {
+  constructor(game) {
+    super(game);
+
+    this.pos = EnemyTank.DEFAULTS.pos.pop();
+    this.color = EnemyTank.DEFAULTS.color.pop();
+    this.speed = EnemyTank.DEFAULTS.speed;
+    this.aimX = (this.pos[0] - 35);
+    this.aimY = this.pos[1];
+    this.sides = this.getSides();
+    this.moveDirection = this.getNewDirection();
+
+    this.seesPlayerOne;
+    this.lineOfFirePoint = [this.aimX, this.aimY];
+    this.pixelsAwayFromCannon = 0;
+
+    // sets this.seesPlayerOne
+    setInterval(() => { this.cannonAI(); }, 1);
+
+    // try to fire
+    setInterval(() => { if (this.seesPlayerOne) {  this.fire();  }  }, 750);
+
+    // new moveDirection every five seconds
+    setInterval(() => {  this.moveDirection = this.getNewDirection();  }, 3000);
+
+  }
+
+  // drawLine(ctx) {
+  //   ctx.strokeStyle = 'yellow';
+  //   ctx.beginPath();
+  //   ctx.arc(this.lineOfFirePoint[0], this.lineOfFirePoint[1], 5, 0, (2 * Math.PI), false);
+  //   ctx.stroke();
+  // }
+
+  getNewDirection() {
+    return EnemyTank.MOVES[(Object.keys(EnemyTank.MOVES)[Math.floor(Math.random() * 4)])];
+  }
+
+  cannonAI() {
+    let objects = [].concat(this.game.coverOnly, [this.game.playerOne]);
+
+    objects.forEach(object => {
+      if ((this.lineOfFirePoint[0] >= object.sides.left &&
+          this.lineOfFirePoint[0] <= object.sides.right) &&
+          (this.lineOfFirePoint[1] >= object.sides.top &&
+          this.lineOfFirePoint[1] <= object.sides.bottom)) {
+          if (object === this.game.playerOne) {
+            this.seesPlayerOne = true;
+          } else {
+            this.seesPlayerOne = false;
+          }
+        this.lineOfFirePoint = [this.aimX, this.aimY];
+        this.pixelsAwayFromCannon = 0;
+      }
+    });
+
+    this.lineOfFirePoint = [
+      (this.aimX + (this.cannonSlope[0] * this.pixelsAwayFromCannon)),
+      (this.aimY + (this.cannonSlope[1] * this.pixelsAwayFromCannon))
+    ];
+
+    this.pixelsAwayFromCannon = this.pixelsAwayFromCannon + 10;
+  }
+
+  // attackAI() {
+  //   if (this.seesPlayerOne) {
+  //     console.log('inside attackAI');
+  //     this.fire();
+  //     setTimeout(this.attackAI, 3000);
+  //   }
+  // }
+
+}
+
+module.exports = EnemyTank;
+
+EnemyTank.DEFAULTS = {
+  color: ['red', 'purple'],
+  pos: [[755, 300], [600, 300]],
+  speed: 1
+};
+
+EnemyTank.MOVES = {
+  up: [0, -1],
+  left: [-1, 0],
+  right: [0, 1],
+  down: [1, 0]
+};
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports) {
+
+class Barrier {
+
+  constructor(xPos, yPos, width, height) {
+    this.xPos = xPos;
+    this.yPos = yPos;
+    this.width = width;
+    this.height = height;
+
+    this.sides = {
+      top: this.yPos,
+      right: (this.xPos + this.width),
+      bottom: (this.yPos + this.height),
+      left: this.xPos
+    };
+  }
+
+  draw(ctx) {
+    ctx.fillStyle = 'red';
+    ctx.fillRect(this.xPos, this.yPos, this.width, this.height);
+  }
+
+}
+
+module.exports = Barrier;
+
+
+/***/ }),
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global) {class GameView {
@@ -572,13 +794,14 @@ module.exports = Tank;
     this.mousePos = [400, 300];
     this.tank = this.game.addTank();
     this.enemy = this.game.addEnemies();
+    this.enemy = this.game.addEnemies();
 
     this.game.addBarriers();
 
     this.setMousePosition = this.setMousePosition.bind(this);
     this.handleClick = this.handleClick.bind(this);
 
-    console.log('new gameView');
+    // console.log('new gameView');
   }
 
   listenForMouse() {
@@ -645,10 +868,10 @@ GameView.MOVES = {
 
 module.exports = GameView;
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(9)))
 
 /***/ }),
-/* 6 */
+/* 9 */
 /***/ (function(module, exports) {
 
 var g;
@@ -672,164 +895,6 @@ try {
 // easier to handle this case. if(!global) { ...}
 
 module.exports = g;
-
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports) {
-
-class Explosion {
-
-  constructor(pos) {
-    this.pos = pos;
-    this.radius = 0;
-    this.radiusTwo = 0;
-  }
-
-  draw(ctx) {
-    ctx.beginPath();
-    ctx.arc(this.pos[0], this.pos[1], this.radius, 0, (2 * Math.PI), false);
-    ctx.strokeStyle = 'red';
-    ctx.lineWidth = 3;
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(this.pos[0], this.pos[1], this.radiusTwo, 0, (2 * Math.PI), false);
-    ctx.strokeStyle = 'orange';
-    ctx.lineWidth = 3;
-    ctx.stroke();
-
-    this.radius = this.radius + 1;
-    this.radiusTwo = this.radiusTwo + .5;
-  }
-
-}
-
-module.exports = Explosion;
-
-
-/***/ }),
-/* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const Tank = __webpack_require__(4);
-
-const DEFAULTS = {
-  color: 'blue',
-  pos: [45, 300]
-};
-
-class PlayerOne extends Tank {
-  constructor(game) {
-    super(game);
-
-    this.pos = DEFAULTS.pos;
-    this.color = DEFAULTS.color;
-    this.aimX = this.pos[0] + 35;
-    this.aimY = this.pos[1];
-    this.sides = this.getSides();
-    // this.enemies = this.idEnemies();
-  }
-
-}
-
-module.exports = PlayerOne;
-
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const Tank = __webpack_require__(4);
-
-class EnemyTank extends Tank {
-  constructor(game) {
-    super(game);
-
-    this.pos = EnemyTank.DEFAULTS.pos;
-    this.color = EnemyTank.DEFAULTS.color;
-    this.speed = EnemyTank.DEFAULTS.speed;
-    this.aimX = (this.pos[0] - 35);
-    this.aimY = this.pos[1];
-    this.sides = this.getSides();
-    this.moveDirection = this.getNewDirection();
-
-    this.seesPlayerOne;
-    this.lineOfFirePoint = [this.aimX, this.aimY];
-    this.pixelsAwayFromCannon = 0;
-
-    // sets this.seesPlayerOne
-    setInterval(() => { this.cannonAI(); }, 1);
-
-    // try to fire
-    setInterval(() => { if (this.seesPlayerOne) {  this.fire();  }  }, 750);
-
-    // new moveDirection every five seconds
-    setInterval(() => {  this.moveDirection = this.getNewDirection();  }, 5000);
-
-  }
-
-  // drawLine(ctx) {
-  //   ctx.strokeStyle = 'yellow';
-  //   ctx.beginPath();
-  //   ctx.arc(this.lineOfFirePoint[0], this.lineOfFirePoint[1], 5, 0, (2 * Math.PI), false);
-  //   ctx.stroke();
-  // }
-
-  getNewDirection() {
-    return EnemyTank.MOVES[(Object.keys(EnemyTank.MOVES)[Math.floor(Math.random() * 4)])];
-  }
-
-  cannonAI() {
-    let objects = [].concat(this.game.coverOnly, [this.game.playerOne]);
-
-    objects.forEach(object => {
-      if ((this.lineOfFirePoint[0] >= object.sides.left &&
-          this.lineOfFirePoint[0] <= object.sides.right) &&
-          (this.lineOfFirePoint[1] >= object.sides.top &&
-          this.lineOfFirePoint[1] <= object.sides.bottom)) {
-          if (object === this.game.playerOne) {
-            this.seesPlayerOne = true;
-          } else {
-            this.seesPlayerOne = false;
-          }
-        this.lineOfFirePoint = [this.aimX, this.aimY];
-        this.pixelsAwayFromCannon = 0;
-      }
-    });
-
-    this.lineOfFirePoint = [
-      (this.aimX + (this.cannonSlope[0] * this.pixelsAwayFromCannon)),
-      (this.aimY + (this.cannonSlope[1] * this.pixelsAwayFromCannon))
-    ];
-
-    this.pixelsAwayFromCannon = this.pixelsAwayFromCannon + 10;
-  }
-
-  // attackAI() {
-  //   if (this.seesPlayerOne) {
-  //     console.log('inside attackAI');
-  //     this.fire();
-  //     setTimeout(this.attackAI, 3000);
-  //   }
-  // }
-
-}
-
-module.exports = EnemyTank;
-
-EnemyTank.DEFAULTS = {
-  color: 'red',
-  pos: [755, 300],
-  speed: 1
-};
-
-EnemyTank.MOVES = {
-  up: [0, -1],
-  left: [-1, 0],
-  right: [0, 1],
-  down: [1, 0]
-};
 
 
 /***/ })

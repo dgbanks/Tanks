@@ -74,7 +74,7 @@ class Tank {
     this.game = game;
     this.moveDirection = [0, 0];
     this.width = 50;
-    this.speed = 5;
+    this.speed = 1;
     this.cannonSlope = [0, 0];
 
     this.bullets = 0;
@@ -174,10 +174,6 @@ class Tank {
 
     this.pos = [(this.pos[0] + direction[0]), (this.pos[1] + direction[1])];
     this.sides = this.getSides();
-
-    if (this === this.game.playerOne) {
-      this.moveDirection = [0, 0];
-    }
   }
 
   swivelCannon(mousePos) {
@@ -293,7 +289,7 @@ class Bullet {
           right: (object.pos[0] + object.radius),
           bottom: (object.pos[1] + object.radius),
           left: (object.pos[0] - object.radius)
-        }
+        };
       } else {
         objectDimensions = {
           top: object.sides.top,
@@ -327,6 +323,7 @@ class Bullet {
     if (this.targets.includes(object)) {
       console.log('hits ', object);
       this.game.remove(object);
+      // this is the bug line
       // this.pos = object.pos;
       this.explosionTimeout = 750;
 
@@ -607,12 +604,12 @@ class Game {
 
 
     // render the player's aim
-    // ctx.beginPath();
-    // ctx.moveTo(this.playerOne.pos[0], this.playerOne.pos[1]);
-    // ctx.lineTo(mouseObject.mousePos[0], mouseObject.mousePos[1]);
-    // ctx.strokeStyle = 'white';
-    // ctx.lineWidth = 1;
-    // ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(this.playerOne.pos[0], this.playerOne.pos[1]);
+    ctx.lineTo(mouseObject.mousePos[0], mouseObject.mousePos[1]);
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = .5;
+    ctx.stroke();
     //
     // ctx.beginPath();
     // ctx.moveTo(this.enemy.pos[0], this.enemy.pos[1]);
@@ -667,7 +664,6 @@ class EnemyTank extends Tank {
 
     this.pos = EnemyTank.DEFAULTS.pos.pop();
     this.color = EnemyTank.DEFAULTS.color.pop();
-    this.speed = EnemyTank.DEFAULTS.speed;
     this.aimX = (this.pos[0] - 35);
     this.aimY = this.pos[1];
     this.sides = this.getSides();
@@ -739,8 +735,7 @@ module.exports = EnemyTank;
 
 EnemyTank.DEFAULTS = {
   color: ['red', 'purple'],
-  pos: [[755, 300], [600, 300]],
-  speed: 1
+  pos: [[755, 300], [600, 300]]
 };
 
 EnemyTank.MOVES = {
@@ -772,7 +767,7 @@ class Barrier {
   }
 
   draw(ctx) {
-    ctx.fillStyle = 'red';
+    ctx.fillStyle = 'gray';
     ctx.fillRect(this.xPos, this.yPos, this.width, this.height);
   }
 
@@ -783,9 +778,9 @@ module.exports = Barrier;
 
 /***/ }),
 /* 8 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, exports) {
 
-/* WEBPACK VAR INJECTION */(function(global) {class GameView {
+class GameView {
 
   constructor(game, context, canvas) {
     this.game = game;
@@ -821,14 +816,30 @@ module.exports = Barrier;
   }
 
   bindKeys() {
-    const tank = this.tank;
-
     Object.keys(GameView.MOVES).forEach((k) => {
-      let direction = GameView.MOVES[k];
-      global.key(k, () => {
-        tank.moveDirection = direction;
+      document.addEventListener('keydown', event => {
+        this.tank.moveDirection = GameView.MOVES[event.key];
       });
     });
+
+    document.addEventListener('keyup', event => {
+      this.tank.moveDirection = [0, 0];
+    });
+
+    // this.canvas.addEventListener('keyup', tank.moveDirection = [0, 0]);
+    // Object.keys(GameView.MOVES).forEach((k) => {
+    //   let direction = GameView.MOVES[k];
+    // });
+
+
+    // const tank = this.tank;
+    //
+    // Object.keys(GameView.MOVES).forEach((k) => {
+    //   let direction = GameView.MOVES[k];
+    //   global.key(k, () => {
+    //     tank.moveDirection = direction;
+    //   });
+    // });
   }
 
   displayOutcome() {
@@ -867,34 +878,6 @@ GameView.MOVES = {
 };
 
 module.exports = GameView;
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(9)))
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports) {
-
-var g;
-
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1,eval)("this");
-} catch(e) {
-	// This works if the window reference is available
-	if(typeof window === "object")
-		g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
 
 
 /***/ })

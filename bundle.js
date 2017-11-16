@@ -103,8 +103,8 @@ class Tank {
       this.game.barriers.forEach(barrier => {
         if ((this.sides.top === barrier.sides.bottom) && (
           (this.sides.left >= barrier.sides.left &&
-          this.sides.left < barrier.sides.right) ||
-          (this.sides.right > barrier.sides.left &&
+          this.sides.left <= barrier.sides.right) ||
+          (this.sides.right >= barrier.sides.left &&
           this.sides.right <= barrier.sides.right) ||
           (this.pos[0] >= barrier.sides.left &&
           this.pos[0] <= barrier.sides.right))) {
@@ -118,8 +118,8 @@ class Tank {
       this.game.barriers.forEach(barrier => {
         if ((this.sides.bottom === barrier.sides.top) && (
           (this.sides.left >= barrier.sides.left &&
-          this.sides.left < barrier.sides.right) ||
-          (this.sides.right > barrier.sides.left &&
+          this.sides.left <= barrier.sides.right) ||
+          (this.sides.right >= barrier.sides.left &&
           this.sides.right <= barrier.sides.right) ||
           (this.pos[0] >= barrier.sides.left &&
           this.pos[0] <= barrier.sides.right))) {
@@ -132,10 +132,10 @@ class Tank {
     if ((direction[0] === -1) && (direction[1] === 0)) {
       this.game.barriers.forEach(barrier => {
         if ((this.sides.left === barrier.sides.right) && (
-          (this.sides.top > barrier.sides.top &&
-          this.sides.top < barrier.sides.bottom) ||
-          (this.sides.bottom > barrier.sides.top &&
-          this.sides.bottom < barrier.sides.bottom) ||
+          (this.sides.top >= barrier.sides.top &&
+          this.sides.top <= barrier.sides.bottom) ||
+          (this.sides.bottom >= barrier.sides.top &&
+          this.sides.bottom <= barrier.sides.bottom) ||
           (this.pos[1] >= barrier.sides.top &&
           this.pos[1] <= barrier.sides.bottom))) {
             bool = false;
@@ -147,10 +147,10 @@ class Tank {
     if ((direction[0] === 1) && (direction[1] === 0)) {
       this.game.barriers.forEach(barrier => {
         if ((this.sides.right === barrier.sides.left) && (
-          (this.sides.top > barrier.sides.top &&
-          this.sides.top < barrier.sides.bottom) ||
-          (this.sides.bottom > barrier.sides.top &&
-          this.sides.bottom < barrier.sides.bottom) ||
+          (this.sides.top >= barrier.sides.top &&
+          this.sides.top <= barrier.sides.bottom) ||
+          (this.sides.bottom >= barrier.sides.top &&
+          this.sides.bottom <= barrier.sides.bottom) ||
           (this.pos[1] >= barrier.sides.top &&
           this.pos[1] <= barrier.sides.bottom))) {
             bool = false;
@@ -550,12 +550,12 @@ class Game {
     return [].concat(this.tanks, this.bullets);
   }
 
-  moveObjects(direction) {
+  moveObjects() {
     this.getMovingObjects().forEach(object => {
         let props;
         if (object instanceof PlayerOne) {
             // console.log('playerOne');
-            props = direction;
+            props = object.moveDirection;
         } else if (object instanceof EnemyTank) {
           // console.log('EnemyTank');
             // RISKY
@@ -825,21 +825,6 @@ class GameView {
     document.addEventListener('keyup', event => {
       this.tank.moveDirection = [0, 0];
     });
-
-    // this.canvas.addEventListener('keyup', tank.moveDirection = [0, 0]);
-    // Object.keys(GameView.MOVES).forEach((k) => {
-    //   let direction = GameView.MOVES[k];
-    // });
-
-
-    // const tank = this.tank;
-    //
-    // Object.keys(GameView.MOVES).forEach((k) => {
-    //   let direction = GameView.MOVES[k];
-    //   global.key(k, () => {
-    //     tank.moveDirection = direction;
-    //   });
-    // });
   }
 
   displayOutcome() {
@@ -857,7 +842,7 @@ class GameView {
   }
 
   animate() {
-    this.game.moveObjects(this.tank.moveDirection);
+    this.game.moveObjects();
     this.game.drawEverything(this.context, {mousePos: this.mousePos});
     // this.enemy.drawLine(this.context);
 

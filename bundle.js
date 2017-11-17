@@ -268,7 +268,7 @@ class Bullet {
     this.radius = 5;
     this.color = 'white';
     this.explosionTimeout = 300;
-    console.log('hello', this.owner.color, this.owner.bullets);
+    // console.log('hello', this.owner.color, this.owner.bullets);
   }
 
   move(slope) {
@@ -332,15 +332,15 @@ class Bullet {
       // this.pos = object.pos;
       this.explosionTimeout = 750;
 
-      console.log(`${this.owner.color} ${this.owner.bullets} hits ${object.color}`);
-      if (object !== this.game.playerOne) {
-        console.log(`${object.color}.pos FROM ${object.pos}`);
-        object.pos = undefined;
-        console.log(`${object.color}.pos TO ${object.pos}`);
-        // object.sides = undefined;
-
-        // setTimeout(() => { object.pos = undefined; }, 500);
-      }
+      console.log(`${this.owner.color} hits ${object.color}`);
+      // if (object !== this.game.playerOne) {
+      //   // console.log(`${object.color}.pos FROM ${object.pos}`);
+      //   object.pos = undefined;
+      //   // console.log(`${object.color}.pos TO ${object.pos}`);
+      //   // object.sides = undefined;
+      //
+      //   // setTimeout(() => { object.pos = undefined; }, 500);
+      // }
     }
   }
 
@@ -510,10 +510,10 @@ class Game {
       // object.pos = undefined;
 
       // this.gameOver();
-      setTimeout(() => { this.gameOver(); }, 1000);
+      setTimeout(() => { this.gameOver(); }, 750);
 
     } else if (object instanceof Bullet) {
-      console.log('goodbye', object.owner.color, object.owner.bullets);
+      // console.log('goodbye', object.owner.color, object.owner.bullets);
       this.bullets = this.bullets.filter(bullet => (
         object !== bullet
       ));
@@ -710,8 +710,12 @@ class EnemyTank extends Tank {
           this.lineOfFirePoint[1] <= object.sides.bottom)) {
           if (object === this.game.playerOne) {
             this.seesPlayerOne = true;
+            console.log(`${this.color} sees PlayerOne`);
           } else {
             this.seesPlayerOne = false;
+            if (object instanceof Tank) {
+              console.log(`${this.color} sees EnemyTank`);
+            }
           }
         this.lineOfFirePoint = [this.aimX, this.aimY];
         this.pixelsAwayFromCannon = 0;

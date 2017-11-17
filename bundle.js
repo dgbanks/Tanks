@@ -104,7 +104,7 @@ class Tank {
     let obstructions = [].concat(this.game.barriers, otherTanks);
 
     // up
-    if ((direction[0] === 0) && (direction[1] === -1)) {
+    if ((direction[1] === -1)) {
       obstructions.forEach(barrier => {
         if ((this.sides.top === barrier.sides.bottom) && (
           (this.sides.left >= barrier.sides.left &&
@@ -119,7 +119,7 @@ class Tank {
     }
 
     // down
-    if ((direction[0] === 0) && (direction[1] === 1)) {
+    if ((direction[1] === 1)) {
       obstructions.forEach(barrier => {
         if ((this.sides.bottom === barrier.sides.top) && (
           (this.sides.left >= barrier.sides.left &&
@@ -134,7 +134,7 @@ class Tank {
     }
 
     // left
-    if ((direction[0] === -1) && (direction[1] === 0)) {
+    if ((direction[0] === -1)) {
       obstructions.forEach(barrier => {
         if ((this.sides.left === barrier.sides.right) && (
           (this.sides.top >= barrier.sides.top &&
@@ -149,7 +149,7 @@ class Tank {
     }
 
     // right
-    if ((direction[0] === 1) && (direction[1] === 0)) {
+    if ((direction[0] === 1)) {
       obstructions.forEach(barrier => {
         if ((this.sides.right === barrier.sides.left) && (
           (this.sides.top >= barrier.sides.top &&
@@ -697,7 +697,7 @@ class EnemyTank extends Tank {
   // }
 
   getNewDirection() {
-    return EnemyTank.MOVES[(Object.keys(EnemyTank.MOVES)[Math.floor(Math.random() * 4)])];
+    return EnemyTank.MOVES[(Object.keys(EnemyTank.MOVES)[Math.floor(Math.random() * 8)])];
   }
 
   cannonAI() {
@@ -750,8 +750,12 @@ EnemyTank.DEFAULTS = {
 EnemyTank.MOVES = {
   up: [0, -1],
   left: [-1, 0],
-  right: [0, 1],
-  down: [1, 0]
+  down: [0, 1],
+  right: [1, 0],
+  upRight: [1, -1],
+  downRight: [1, 1],
+  downLeft: [-1, 1],
+  upLeft: [-1, -1]
 };
 
 
@@ -827,12 +831,23 @@ class GameView {
   bindKeys() {
     Object.keys(GameView.MOVES).forEach((k) => {
       document.addEventListener('keydown', event => {
-        this.tank.moveDirection = GameView.MOVES[event.key];
+        let direction = GameView.MOVES[event.key];
+        let dirX = this.tank.moveDirection[0] + direction[0];
+        let dirY = this.tank.moveDirection[1] + direction[1];
+        if (dirX > 0) { dirX = 1; } else if (dirX < 0) { dirX = -1; }
+        if (dirY > 0) { dirY = 1; } else if (dirY < 0) { dirY = -1; }
+        this.tank.moveDirection = [dirX, dirY];
       });
     });
 
     document.addEventListener('keyup', event => {
-      this.tank.moveDirection = [0, 0];
+      let direction = GameView.MOVES[event.key];
+      let dirX = this.tank.moveDirection[0] - direction[0];
+      let dirY = this.tank.moveDirection[1] - direction[1];
+      if (dirX > 0) { dirX = 1; } else if (dirX < 0) { dirX = -1; }
+      if (dirY > 0) { dirY = 1; } else if (dirY < 0) { dirY = -1; }
+      this.tank.moveDirection = [dirX, dirY];
+      // this.tank.moveDirection = [0, 0];
     });
   }
 

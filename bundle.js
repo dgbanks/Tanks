@@ -97,10 +97,15 @@ class Tank {
 
   canMove(direction) {
     let bool = true;
+    let otherTanks = this.game.tanks.filter(tank => (
+      tank !== this
+    ));
+
+    let obstructions = [].concat(this.game.barriers, otherTanks);
 
     // up
     if ((direction[0] === 0) && (direction[1] === -1)) {
-      this.game.barriers.forEach(barrier => {
+      obstructions.forEach(barrier => {
         if ((this.sides.top === barrier.sides.bottom) && (
           (this.sides.left >= barrier.sides.left &&
           this.sides.left <= barrier.sides.right) ||
@@ -115,7 +120,7 @@ class Tank {
 
     // down
     if ((direction[0] === 0) && (direction[1] === 1)) {
-      this.game.barriers.forEach(barrier => {
+      obstructions.forEach(barrier => {
         if ((this.sides.bottom === barrier.sides.top) && (
           (this.sides.left >= barrier.sides.left &&
           this.sides.left <= barrier.sides.right) ||
@@ -130,7 +135,7 @@ class Tank {
 
     // left
     if ((direction[0] === -1) && (direction[1] === 0)) {
-      this.game.barriers.forEach(barrier => {
+      obstructions.forEach(barrier => {
         if ((this.sides.left === barrier.sides.right) && (
           (this.sides.top >= barrier.sides.top &&
           this.sides.top <= barrier.sides.bottom) ||
@@ -145,7 +150,7 @@ class Tank {
 
     // right
     if ((direction[0] === 1) && (direction[1] === 0)) {
-      this.game.barriers.forEach(barrier => {
+      obstructions.forEach(barrier => {
         if ((this.sides.right === barrier.sides.left) && (
           (this.sides.top >= barrier.sides.top &&
           this.sides.top <= barrier.sides.bottom) ||
@@ -696,7 +701,7 @@ class EnemyTank extends Tank {
   }
 
   cannonAI() {
-    let objects = [].concat(this.game.coverOnly, [this.game.playerOne]);
+    let objects = [].concat(this.game.barriers, this.game.tanks);
 
     objects.forEach(object => {
       if ((this.lineOfFirePoint[0] >= object.sides.left &&

@@ -3,7 +3,9 @@
   <head>
     <meta charset="utf-8">
     <title>Tanks</title>
+    <link rel="stylesheet" href="./font-awesome/css/font-awesome.min.css">
     <style>
+      @import FontAwesome;
 
       body {
         display: flex;
@@ -18,23 +20,84 @@
         align-items: center;
         margin: 0px 25px;
       }
+      
+      .header {
+        width: 70%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 20px;
+        font-family: monospace;
+      }
 
+      .header h1 {
+        font-kerning: normal;
+      }
+      
       .instructions {
         border: 1px solid black;
         padding: 5px;
         margin: 15px;
+        font-family: sans-serif;
+      }
+      
+      .instructions h4 {
+        margin: 5px;
+      }
+      
+      .rule {
+        display: flex;
+        align-items: center;
+      }
+      
+      .rule i {
+        margin-right: 5px;
       }
 
       .game-info {
-        /*border: 1px solid black;*/
-        margin-top: 50px;
         display: flex;
         flex-direction: column;
         align-items: center;
+        height: 100px;
+      }
+      
+      .game-info button {
+        font-size: 35px;
+        background-color: black;
+        color: lightgray;
+      }
+      
+      .game-info button:hover {
+        color: gray;
+        cursor: pointer;
+      }
+      
+      #outcome {
+        height: 50%;
+        font-family: monospace;
+        margin: 0px;
       }
 
       canvas {
         cursor: crosshair;
+        font-size: 30px;
+      }
+      
+      .icons {
+        display: flex;
+        justify-content: space-between;
+        width: 40%;
+        margin: 35px;
+      }
+      
+      .icons i {
+        text-decoration: none;
+        font-size: 50px;
+        color: black;
+      }
+      
+      .icons i:hover {
+        color: gray;
       }
 
     </style>
@@ -42,23 +105,52 @@
   <body>
 
     <div class='side-bar'>
-      <h1>TANKS</h1>
+      <div class='header'>
+        <i class="fa fa-crosshairs" aria-hidden="true"></i>
+        <h1>TANKS</h1>
+        <i class="fa fa-crosshairs" aria-hidden="true"></i>
+      </div>
       <div class='instructions'>
         <h3>How to play:</h3>
-        <h4>=> Move with Up/Left/Down/Right Arrows or W/A/S/D <=</h4>
-        <h4>=> Aim with the cursor <=</h4>
-        <h4>=> Click to shoot <=</h4>
-        <h4>=> At any given time, you may have no more than 5 bullets in the air <=</4>
+        <div class='rule'>
+          <i class="fa fa-arrow-right" aria-hidden="true"></i>
+          <h4>Move with direction arrows or W/A/S/D</h4>
+        </div>
+        <div class='rule'>
+          <i class="fa fa-arrow-right" aria-hidden="true"></i>
+          <h4>Aim with the cursor</h4>
+        </div>
+        <div class='rule'>
+          <i class="fa fa-arrow-right" aria-hidden="true"></i>
+          <h4>Click to shoot</h4>
+        </div>
+        <div class='rule'>
+          <i class="fa fa-arrow-right" aria-hidden="true"></i>
+          <h4>At any given time, you may have no more than 5 bullets in the air</4>
+        </div>
       </div>
       <div class='game-info'>
         <h1 id='outcome'></h1>
-        <button type="button" name="button" onclick="history.go(0)">New Game</button>
+        <button type="button" name="button" onclick="history.go(0)"><i class="fa fa-refresh" aria-hidden="true"></i></button>
+      </div>
+      <div class="icons">
+        <div>
+          <a href='https://github.com/dgbanks'
+            target='_blank'>
+            <i class="fa fa-github" aria-hidden="true"></i>
+          </a>
+        </div>
+        <div>
+          <a href='https://www.linkedin.com/in/david-banks-339a2b14b/'
+            target='_blank'>
+            <i class="fa fa-linkedin-square" aria-hidden="true"></i>
+          </a>
+        </div>
       </div>
     </div>
 
     <canvas height="600" width="800" id='game-map'></canvas>
 
-    <script src="keymaster.js"></script>
     <script type="text/javascript" src="bundle.js"></script>
   </body>
 </html>

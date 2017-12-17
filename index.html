@@ -20,7 +20,7 @@
         align-items: center;
         margin: 0px 25px;
       }
-      
+
       .header {
         width: 70%;
         display: flex;
@@ -33,23 +33,23 @@
       .header h1 {
         font-kerning: normal;
       }
-      
+
       .instructions {
         border: 1px solid black;
         padding: 5px;
         margin: 15px;
         font-family: sans-serif;
       }
-      
+
       .instructions h4 {
         margin: 5px;
       }
-      
+
       .rule {
         display: flex;
         align-items: center;
       }
-      
+
       .rule i {
         margin-right: 5px;
       }
@@ -60,42 +60,47 @@
         align-items: center;
         height: 100px;
       }
-      
+
       .game-info button {
         font-size: 35px;
         background-color: black;
         color: lightgray;
       }
-      
+
       .game-info button:hover {
-        color: gray;
+        background-color: gray;
         cursor: pointer;
       }
-      
+
+      .button:hover .fa-spin-hover {
+        animation: fa-spin 2s infinite linear;
+      }
+
       #outcome {
         height: 50%;
         font-family: monospace;
         margin: 0px;
+        color: blue;
       }
 
       canvas {
         cursor: crosshair;
         font-size: 30px;
       }
-      
+
       .icons {
         display: flex;
         justify-content: space-between;
         width: 40%;
         margin: 35px;
       }
-      
+
       .icons i {
         text-decoration: none;
         font-size: 50px;
         color: black;
       }
-      
+
       .icons i:hover {
         color: gray;
       }
@@ -114,11 +119,11 @@
         <h3>How to play:</h3>
         <div class='rule'>
           <i class="fa fa-arrow-right" aria-hidden="true"></i>
-          <h4>Move with direction arrows or W/A/S/D</h4>
+          <h4>Move with W/A/S/D (left hand)</h4>
         </div>
         <div class='rule'>
           <i class="fa fa-arrow-right" aria-hidden="true"></i>
-          <h4>Aim with the cursor</h4>
+          <h4>Aim with cursor (right hand)</h4>
         </div>
         <div class='rule'>
           <i class="fa fa-arrow-right" aria-hidden="true"></i>
@@ -131,7 +136,9 @@
       </div>
       <div class='game-info'>
         <h1 id='outcome'></h1>
-        <button type="button" name="button" onclick="history.go(0)"><i class="fa fa-refresh" aria-hidden="true"></i></button>
+        <button type="button" class="button" onclick="history.go(0)">
+          New <i class="fa fa-refresh fa-spin-hover" aria-hidden="true"></i> Game
+        </button>
       </div>
       <div class="icons">
         <div>
